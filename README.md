@@ -17,7 +17,7 @@ A mobile-first group-trip planner for friends: plan days and drives together, vo
 
 1. On GitHub, open this repository → **Settings** → **Pages**.
 2. Under **Branch**, choose `main` and `/ (root)`, then **Save**.
-3. After a minute or two the app is live at `https://andersonjones-dev.github.io/lets-go/`.
+3. After a minute or two the app is live at `https://andersonjones-dev.github.io/Lets-Go/`.
 
 Without step 2 below, the app works fully on one phone, but friends can't join your trips.
 
