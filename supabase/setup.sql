@@ -31,6 +31,13 @@ alter table public.trips enable row level security;
 alter table public.members enable row level security;
 alter table public.docs enable row level security;
 
+-- Let signed-in phones use these tables (the rules below still limit them to their own trips).
+-- Needed if "Automatically expose new tables" was switched off when the project was created.
+grant usage on schema public to authenticated;
+grant select, delete on public.trips to authenticated;
+grant select on public.members to authenticated;
+grant select, insert, update, delete on public.docs to authenticated;
+
 -- Is the signed-in phone a member of this trip?
 create or replace function public.is_member(p_trip text)
 returns boolean language sql stable security definer set search_path = public as $$
