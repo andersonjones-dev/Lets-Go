@@ -754,6 +754,9 @@ select.inp{-webkit-appearance:none;appearance:none;background:linear-gradient(45
 body{margin:0;min-height:100vh;min-height:100dvh}
 img{max-width:100%}
 [hidden]{display:none!important}
+.ess{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 16px}
+.ess .t{flex:1;min-width:0;display:flex;flex-direction:column}.ess small{opacity:.75;font-size:13px}
+.note.wx b{font-weight:700}
 /* iPhone Home Screen height fix: if iOS reports the window short, stretch the page to the real
    screen height. Bottom bars stay at bottom:0 plus the safe area, which iOS always places at
    the true bottom; moving them lower pushes the tab bar off the screen. */
@@ -833,7 +836,7 @@ const IC = {
   bell:"M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0", wifi:"M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01",
   user:"M20 21v-1a5 5 0 0 0-5-5H9a5 5 0 0 0-5 5v1M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
   palette:"M12 3a9 9 0 0 0 0 18c1 0 1.5-.7 1.5-1.5 0-1.2-1-1.5-1-2.5s1-1.5 2.5-1.5h2a4 4 0 0 0 4-4c0-4.4-4-8.5-9-8.5zM7.5 11.5h.01M10 7.5h.01M15 7.5h.01",
-  ticket:"M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4zM15 7v10", suitcase:"M4 8h16v11H4zM9 8V5h6v3M4 13h16", sparkle:"M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"
+  ticket:"M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4zM15 7v10", suitcase:"M4 8h16v11H4zM9 8V5h6v3M4 13h16", sun:"M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4", cloud:"M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.6 1.5A3.3 3.3 0 0 0 7 18z", rain:"M7 14h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.6 1.5A3.3 3.3 0 0 0 7 14zM8 17l-1 3M12 17l-1 3M16 17l-1 3", history:"M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2", shield:"M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z", car:"M5 16h14M6 16l1.5-5h9L18 16M5 16v3h2v-2h10v2h2v-3M8 13.5h.01M16 13.5h.01", sparkle:"M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"
 };
 const ic = (n, s = 20, w = 1.9) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${IC[n]}"/></svg>`;
 
@@ -945,7 +948,7 @@ const LOGO = `<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"
 
 /* ============ Data ============ */
 const COLORS = ["#0B6B5C","#E0715A","#6E67C4","#C98A16","#3C8DB3","#B85480","#4E8B6E","#8C6B4F"];
-const SYNCED = ["ideas","tasks","expenses","settlements","links","messages","routes","kit","polls","bookings"];
+const SYNCED = ["ideas","tasks","expenses","settlements","links","messages","routes","kit","polls","bookings","kitty","log"];
 function seed() {
   const M = (id, name, c) => ({ id, name, color: COLORS[c], upi: "" });
   const members = [M("m1","Andy",0),M("m2","Rahul",1),M("m3","Priya",2),M("m4","Sam",3),M("m5","Meera",4),M("m6","Arjun",5)];
@@ -1007,13 +1010,24 @@ function seed() {
     ],
     expenses: [
       { id: uid("e"), title: "Homestay deposit", amount: 600000, date: "2026-10-20", paidBy: "m1", category: "stay", note: "", split: { type: "equal", participants: all, custom: {} } },
-      { id: uid("e"), title: "Fuel for the drive", amount: 220000, date: "2026-11-14", paidBy: "m3", category: "fuel", note: "Only the 4 in the car", split: { type: "participation", participants: ["m1","m2","m3","m4"], custom: {} } },
+      { id: "e_fuel", title: "Fuel for the drive", amount: 220000, date: "2026-11-14", paidBy: "m3", category: "fuel", note: "Only the 4 in Rahul's car", split: { type: "group", group: "g_car1", participants: ["m1","m2","m3","m4"], custom: {} } },
+      { id: uid("e"), title: "Tolls and parking", amount: 85000, date: "2026-11-14", paidBy: "pot", category: "transport", note: "", split: { type: "equal", participants: all, custom: {} } },
+      { id: uid("e"), title: "Breakfast at the homestay", amount: 240000, date: "2026-11-15", paidBy: "pot", category: "food", note: "", split: { type: "equal", participants: all, custom: {} } },
       { id: uid("e"), title: "Lunch at Taste of Coorg", amount: 120000, date: "2026-11-14", paidBy: "m5", category: "food", note: "", split: { type: "custom", participants: all, custom: { m1: 25000, m2: 20000, m3: 18000, m4: 22000, m5: 20000, m6: 15000 } } },
       { id: uid("e"), title: "Groceries and snacks", amount: 145000, date: "2026-11-13", paidBy: "m2", category: "groceries", note: "", split: { type: "equal", participants: all, custom: {} } },
       { id: uid("e"), title: "Sunrise jeep safari", amount: 380000, date: "2026-11-15", paidBy: "m4", category: "activity", note: "Arjun skipped this one", split: { type: "participation", participants: ["m1","m2","m3","m4","m5"], custom: {} } }
     ],
     settlements: [
       { id: uid("s"), from: "m6", to: "m1", amount: 100000, date: "2026-10-22", method: "UPI", note: "Homestay share" }
+    ],
+    pot: { holder: "m2", per: 300000 },
+    kitty: all.map((id, i) => ({ id: uid("k"), kind: "in", from: id, amount: 300000, date: "2026-11-14", ts: Date.now() - 86400000 + i, by: "m2" })),
+    groups: { cars: [{ id: "g_car1", name: "Rahul's car", members: ["m1","m2","m3","m4"] }, { id: "g_car2", name: "Meera's car", members: ["m5","m6"] }],
+      rooms: [{ id: "g_r1", name: "Garden room", members: ["m1","m2","m4","m6"] }, { id: "g_r2", name: "Hill-view room", members: ["m3","m5"] }] },
+    essentials: { stay: { name: "Coffee-estate homestay (demo)", address: "Madikeri, Kodagu, Karnataka", phone: "", checkin: "12:00", checkout: "11:00" }, contacts: [{ id: "p1", name: "Homestay host", phone: "", note: "Add the real number" }], notes: "Gate closes at 10 PM. Ask the host for the Wi-Fi password." },
+    log: [
+      { id: uid("h"), at: Date.now() - 86400000 * 3, by: "m3", kind: "exp", act: "add", ref: "e_fuel", title: "Fuel for the drive", amt: 200000 },
+      { id: uid("h"), at: Date.now() - 86400000 * 2, by: "m3", kind: "exp", act: "edit", ref: "e_fuel", title: "Fuel for the drive", amt: 220000, changes: ["Amount ₹2,000 → ₹2,200", "Split changed"] }
     ],
     links: [
       { id: uid("l"), title: "Kodagu district guide", url: "https://en.wikipedia.org/wiki/Kodagu_district", note: "Background reading", addedBy: "m3" },
@@ -1048,6 +1062,8 @@ if (!STORE || !STORE.trips) {
 function fixTrip(t) {
   SYNCED.forEach(k => { if (!Array.isArray(t[k])) t[k] = []; });
   t.budget = t.budget || {}; t.rates = t.rates || {}; t.members = t.members || [];
+  t.groups = t.groups && t.groups.cars ? t.groups : { cars: [], rooms: [] }; if (!t.groups.rooms) t.groups.rooms = [];
+  t.essentials = t.essentials || { stay: {}, contacts: [], notes: "" }; if (t.pot === undefined) t.pot = null;
   t.trip = t.trip || { name: "Trip", destination: "", start: todayISO(), end: todayISO() };
   if (!t.trip.join) t.trip.join = joinSecret();
   return t;
@@ -1086,11 +1102,11 @@ function applyTheme() {
 
 /* ============ Model helpers ============ */
 const mem = id => S.members.find(m => m.id === id);
-const nm = id => id === S.me ? "You" : (mem(id)?.name || "Someone");
-const nmFull = id => mem(id)?.name || "Someone";
+const nm = id => id === "pot" ? "Kitty" : id === S.me ? "You" : (mem(id)?.name || "Someone");
+const nmFull = id => id === "pot" ? "the kitty" : mem(id)?.name || "Someone";
 const initials = id => { const m = mem(id); if (!m) return "?"; return m.name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase(); };
 const avColor = id => { const c = mem(id)?.color || "#999"; if (UI.design !== "sketch") return c; const i = COLORS.indexOf(c); return PASTEL[i >= 0 ? i : (S.members.findIndex(m => m.id === id) + 8) % 8]; };
-const av = (id, s = 32) => `<span class="av" style="width:${s}px;height:${s}px;background:${avColor(id)};font-size:${Math.round(s * .4)}px" title="${esc(nmFull(id))}">${esc(initials(id))}</span>`;
+const av = (id, s = 32) => id === "pot" ? `<span class="av" style="width:${s}px;height:${s}px;background:var(--coral);color:#3A140B;font-size:${Math.round(s * .45)}px" title="Trip kitty">₹</span>` : `<span class="av" style="width:${s}px;height:${s}px;background:${avColor(id)};font-size:${Math.round(s * .4)}px" title="${esc(nmFull(id))}">${esc(initials(id))}</span>`;
 const avs = (ids, s = 28, max = 4) => { ids = ids.filter(mem); const show = ids.slice(0, max); const more = ids.length - show.length; return `<span class="avs">${show.map(i => av(i, s)).join("")}${more > 0 ? `<span class="av more" style="width:${s}px;height:${s}px">+${more}</span>` : ""}</span>`; };
 function days() {
   const out = []; const a = parseDate(S.trip.start), b = parseDate(S.trip.end);
@@ -1119,6 +1135,9 @@ function balances() {
   const net = {}; S.members.forEach(m => net[m.id] = 0);
   for (const e of S.expenses) { net[e.paidBy] = (net[e.paidBy] || 0) + e.amount; for (const [k, v] of Object.entries(shares(e))) net[k] = (net[k] || 0) - v; }
   for (const s of S.settlements) if (s.status !== "pending") { net[s.from] = (net[s.from] || 0) + s.amount; net[s.to] = (net[s.to] || 0) - s.amount; }
+  for (const k of S.kitty) { if (k.kind === "in") { net[k.from] = (net[k.from] || 0) + k.amount; net.pot = (net.pot || 0) - k.amount; } else { net[k.to] = (net[k.to] || 0) - k.amount; net.pot = (net.pot || 0) + k.amount; } }
+  /* The kitty's cash is physically with its holder, so the holder carries the kitty's balance */
+  if ("pot" in net) { const h = S.pot && mem(S.pot.holder) ? S.pot.holder : S.me; net[h] = (net[h] || 0) + net.pot; delete net.pot; }
   return net;
 }
 function suggest(net) {
@@ -1134,7 +1153,7 @@ function suggest(net) {
   }
   return out;
 }
-const splitLabel = e => e.split.type === "custom" ? "Custom amounts" : e.split.type === "equal" ? `Split equally · ${e.split.participants.length} people` : `Only those who took part · ${e.split.participants.length}`;
+const splitLabel = e => e.split.type === "group" ? `${(groupOf(e.split.group) || {}).name || "Car or room"} · ${e.split.participants.length} people` : e.split.type === "custom" ? "Custom amounts" : e.split.type === "equal" ? `Split equally · ${e.split.participants.length} people` : `Only those who took part · ${e.split.participants.length}`;
 const spentBy = cat => S.expenses.filter(e => e.category === cat).reduce((a, e) => a + e.amount, 0);
 const totalSpent = () => S.expenses.reduce((a, e) => a + e.amount, 0);
 
@@ -1329,7 +1348,7 @@ async function handleJoinLink() {
     const snap = await DB.doc(tp(tid)).get();
     if (!snap.exists) throw 0;
     const d = snap.data();
-    if (!STORE.trips[tid]) STORE.trips[tid] = fixTrip({ v: 2, id: tid, me: "", meChosen: false, remote: true, trip: d.trip, members: d.members || [], budget: d.budget || {}, rates: d.rates || {}, demo: d.demo });
+    if (!STORE.trips[tid]) STORE.trips[tid] = fixTrip({ v: 2, id: tid, me: "", meChosen: false, remote: true, ...metaFields(d) });
     switchTrip(tid);
     toast(`You've joined ${d.trip.name}`);
   } catch { toast("That invite link didn't work. Ask for a fresh one.", "info"); }
@@ -1384,7 +1403,8 @@ window.addEventListener("pageshow", () => setTimeout(fixHomeScreenHeight, 60));
 /* ============ Live sync (shared trip store) ============ */
 let DB = null, syncReady = false, syncState = "local", synced = {}, metaSynced = "", pushT = null, pushing = false, pushAgain = false, syncWarned = false, subs = [], subTrip = "";
 const tp = (tid, k) => k ? `trips/${tid}/${k}` : `trips/${tid}`;
-const metaObj = T => ({ trip: T.trip, members: T.members, budget: T.budget, rates: T.rates, demo: !!T.demo });
+const metaObj = T => ({ trip: T.trip, members: T.members, budget: T.budget, rates: T.rates, demo: !!T.demo, pot: T.pot || null, groups: T.groups || { cars: [], rooms: [] }, essentials: T.essentials || {} });
+const metaFields = x => ({ trip: x.trip, members: x.members || [], budget: x.budget || {}, rates: x.rates || {}, demo: x.demo, pot: x.pot || null, groups: x.groups && x.groups.cars ? x.groups : { cars: [], rooms: [] }, essentials: x.essentials || { stay: {}, contacts: [], notes: "" } });
 function setSync(s) {
   if (DB && !navigator.onLine) s = "offline";
   if (s === syncState) return; syncState = s;
@@ -1448,8 +1468,8 @@ async function initSync() {
     const ids = new Set(); let changed = false;
     q.docs.forEach(d => {
       const id = d.id, m = clone(d.data()); ids.add(id);
-      if (!STORE.trips[id]) { STORE.trips[id] = fixTrip({ v: 2, id, me: "", meChosen: false, remote: true, trip: m.trip, members: m.members || [], budget: m.budget || {}, rates: m.rates || {}, demo: m.demo }); recogniseMe(STORE.trips[id]); changed = true; }
-      else if (id !== subTrip) { Object.assign(STORE.trips[id], { trip: m.trip, members: m.members || [], budget: m.budget || {}, rates: m.rates || {}, demo: m.demo, remote: true }); changed = true; }
+      if (!STORE.trips[id]) { STORE.trips[id] = fixTrip({ v: 2, id, me: "", meChosen: false, remote: true, ...metaFields(m) }); recogniseMe(STORE.trips[id]); changed = true; }
+      else if (id !== subTrip) { Object.assign(STORE.trips[id], { ...metaFields(m), remote: true }); changed = true; }
     });
     Object.keys(STORE.trips).forEach(id => { if (STORE.trips[id].remote && !ids.has(id) && id !== subTrip) { delete STORE.trips[id]; changed = true; } });
     if (changed) remoteRender();
@@ -1476,7 +1496,7 @@ async function subscribeTrip(tid) {
     const d = clone(snap.data()); const js = stable(d);
     if (js === metaSynced) return; metaSynced = js;
     const T = STORE.trips[tid]; if (!T) return;
-    Object.assign(T, { trip: d.trip, members: d.members || [], budget: d.budget || {}, rates: d.rates || {}, demo: d.demo, remote: true });
+    Object.assign(T, { ...metaFields(d), remote: true });
     if (!T.members.some(m => m.id === T.me)) { T.me = ""; T.meChosen = false; }
     recogniseMe(T);
     remoteRender();
@@ -1592,6 +1612,8 @@ function render(fromRemote) {
   renderNav(); save();
   if (UI.tab === "chat") requestAnimationFrame(() => window.scrollTo(0, document.body.scrollHeight));
   else if (fromRemote) window.scrollTo(0, y);
+  if (UI.tab === "trip" || UI.tab === "plan") setTimeout(loadWeather, 400);
+  if (!render.remT || Date.now() - render.remT > 60000) { render.remT = Date.now(); setTimeout(scheduleReminders, 1500); }
 }
 
 /* ============ WELCOME & TRIPS ============ */
@@ -1679,9 +1701,12 @@ function newTripSheet() {
     <div class="field"><label for="nt-dest">Where to?</label><input class="inp" id="nt-dest" maxlength="60" placeholder="e.g. North Goa"></div>
     <div class="two"><div class="field"><label for="nt-start">Starts</label><input class="inp" type="date" id="nt-start" value="${isoDate(d)}"></div><div class="field"><label for="nt-end">Ends</label><input class="inp" type="date" id="nt-end" value="${isoDate(e)}"></div></div>
     <div class="field"><label for="nt-me">Your name</label><input class="inp" id="nt-me" maxlength="24" value="${esc(myName)}" placeholder="What friends call you"></div>
+    ${Object.keys(STORE.trips).length ? `<div class="field"><label for="nt-from">Start from an earlier trip</label><select class="inp" id="nt-from"><option value="">No, start fresh</option>${Object.values(STORE.trips).map(T => `<option value="${T.id}">${esc(T.trip.name)}${T.demo ? " (demo)" : ""}</option>`).join("")}</select></div>
+    <div class="card" id="nt-opts" style="padding:4px 12px" hidden>${[["people","The group, cars and rooms"],["kit","Packing list"],["tasks","Tasks (as new, undone)"],["budget","Budget"]].map(([k, l]) => `<label class="prow" style="cursor:pointer"><input type="checkbox" id="nt-${k}" checked style="width:20px;height:20px;accent-color:var(--ever)"><span class="nm">${l}</span></label>`).join("")}</div>` : ""}
     <div class="err" id="f-err" hidden></div>
     <button class="btn block" type="submit">Create trip</button>
     <p class="calc" style="margin:0">Not sure of dates yet? Pick rough ones and run a date poll later.</p></form>`, () => {
+    const nf = $("#nt-from"); if (nf) nf.addEventListener("change", () => { $("#nt-opts").hidden = !nf.value; });
     $("#newTripForm").addEventListener("submit", ev => {
       ev.preventDefault();
       const name = $("#nt-name").value.trim(), start = $("#nt-start").value, end = $("#nt-end").value, myName = $("#nt-me").value.trim();
@@ -1691,6 +1716,8 @@ function newTripSheet() {
       if ((parseDate(end) - parseDate(start)) / 86400000 + 1 > 30) return formErr("Trips can be up to 30 days long in this version.", "#nt-end");
       if (!myName) return formErr("Add your name so friends know who you are.", "#nt-me");
       const T = createTrip({ name, destination: $("#nt-dest").value.trim(), start, end, myName });
+      const src = $("#nt-from") && $("#nt-from").value ? STORE.trips[$("#nt-from").value] : null;
+      if (src) copyFromTrip(T, fixTrip(src), { people: $("#nt-people").checked, kit: $("#nt-kit").checked, tasks: $("#nt-tasks").checked, budget: $("#nt-budget").checked, myName });
       STORE.trips[T.id] = T; switchTrip(T.id); toast("Trip created. Invite your friends next.");
     });
   });
@@ -1708,6 +1735,7 @@ function attention() {
   const over = EXP_CATS.filter(c => S.budget[c] && spentBy(c) > S.budget[c]);
   const toConfirm = S.settlements.filter(x => x.status === "pending" && x.to === S.me);
   if (toConfirm.length) items.push({ icon: "money", text: `${nm(toConfirm[0].from)} says they paid you ${money(toConfirm[0].amount)}${toConfirm.length > 1 ? ` (+${toConfirm.length - 1} more)` : ""}`, a: "confirmFirst" });
+  if (S.pot && kittyIn() && kittyLeft() < kittyIn() * .15) items.push({ icon: "money", text: `Kitty is running low · ${money(kittyLeft())} left`, a: "goKitty" });
   if (net[S.me] < 0) items.push({ icon: "money", text: ph.phase === "after" ? `Trip's over. You still owe ${money(-net[S.me])}` : `You owe ${money(-net[S.me])} in total`, a: "goMoneyBal" });
   if (pollsOpen) items.push({ icon: "poll", text: `${pollsOpen} poll${pollsOpen > 1 ? "s" : ""} need your answer`, a: "goIdeas" });
   if (myOpen) items.push({ icon: "tasks", text: `${myOpen} task${myOpen > 1 ? "s" : ""} assigned to you`, a: "goMyTasks" });
@@ -1725,7 +1753,7 @@ function todayCard() {
     return `<div class="card today">
       <div class="row" style="justify-content:space-between"><span class="eyebrow">Countdown</span><button class="link-btn" data-a="todaySim">Preview a trip day</button></div>
       <div class="big">${p.inDays === 1 ? "Tomorrow!" : `${p.inDays} days to go`}</div>
-      ${first ? `<div class="calc">Day 1 starts with <b>${first.kind === "route" ? "Drive: " : ""}${esc(first.title)}</b>${first.time ? " at " + fmtTime(first.time) : ""}.</div>` : ""}</div>`;
+      ${first ? `<div class="calc">Day 1 starts with <b>${first.kind === "route" ? "Drive: " : ""}${esc(first.title)}</b>${first.time ? " at " + fmtTime(first.time) : ""}.</div>` : ""}${wxLine(dl[0], true)}</div>`;
   }
   if (p.phase === "after") {
     return `<div class="card today"><span class="eyebrow">Trip complete</span><div class="big">Hope it was a good one</div>
@@ -1742,6 +1770,8 @@ function todayCard() {
       ${nx.kind === "route" ? `<a class="btn block" href="${esc(gmapsUrl(nx.o))}" target="_blank" rel="noopener">${ic("nav", 18)} Start in Google Maps</a>` : ""}`
     : `<div class="big">Nothing else planned today</div><div class="calc">Free time. Enjoy it.</div>`}
     ${later.length ? `<div class="later">${later.map(e => `<div><b>${fmtTime(e.time)}</b><span>${e.kind === "route" ? "Drive: " : ""}${esc(e.title)}</span></div>`).join("")}</div>` : ""}
+    ${wxLine(dl[p.day])}
+    <button class="btn block ghost" style="margin-top:10px" data-a="essentials">${ic("shield", 18)} Trip essentials</button>
     ${p.c.sim ? `<div class="calc" style="font-size:12.5px">Preview shows Day 2 at 4:15 AM. On real trip days this card appears by itself.</div>` : ""}
   </div>`;
 }
@@ -1790,6 +1820,9 @@ function vTrip() {
     </div>
   </section>
   <section class="section">
+    <button class="card ess" data-a="essentials">${ic("shield", 22)}<span class="t"><b>Trip essentials</b><small>${esc([S.essentials.stay && S.essentials.stay.name, (S.essentials.contacts || []).length ? (S.essentials.contacts.length + " contact" + (S.essentials.contacts.length > 1 ? "s" : "")) : "", "112 · hospital"].filter(Boolean).join(" · "))}</small></span>${ic("chev", 18)}</button>
+  </section>
+  <section class="section">
     <div class="two"><button class="btn ghost" data-a="shareTrip">${ic("share", 18)} Share summary</button><button class="btn ghost" data-a="recap">${ic("sparkle", 18)} Trip recap</button></div>
   </section>
   <button class="fab" data-a="quickAdd" aria-label="Quick add">${ic("plus", 28, 2.4)}</button>`;
@@ -1811,6 +1844,7 @@ function vPlan() {
 function vItin() {
   const dl = days(); const ev = dayEvents(UI.day); const acts = itinerary(UI.day);
   return `<div class="days">${dl.map((d, i) => `<button class="day ${UI.day === i ? "on" : ""}" data-a="pickDay" data-v="${i}">Day ${i + 1}<small>${fmtDate(d)}</small></button>`).join("")}</div>
+  ${wxLine(dl[UI.day])}
   <div class="tl" style="margin-top:16px">
     ${ev.length ? ev.map(e => {
       const tm = `<div class="tl-time">${e.time ? fmtTime(e.time).replace(" ", "<small>") + "</small>" : "Any<small>time</small>"}</div>`;
@@ -1971,8 +2005,8 @@ function vKit() {
 
 /* ============ MONEY ============ */
 function vMoney() {
-  const seg = `<div class="seg">${[["exp","Expenses"],["bal","Settle up"],["budget","Budget"]].map(([k, l]) => `<button class="${UI.money === k ? "on" : ""}" data-a="moneySeg" data-v="${k}">${l}</button>`).join("")}</div>`;
-  const body = UI.money === "exp" ? vExpenses() : UI.money === "bal" ? vBalances() : vBudget();
+  const seg = `<div class="seg">${[["exp","Expenses"],["bal","Settle up"],["kitty","Kitty"],["budget","Budget"]].map(([k, l]) => `<button class="${UI.money === k ? "on" : ""}" data-a="moneySeg" data-v="${k}">${l}</button>`).join("")}</div>`;
+  const body = UI.money === "exp" ? vExpenses() : UI.money === "bal" ? vBalances() : UI.money === "kitty" ? vKitty() : vBudget();
   return `<header class="topbar"><h1>Money</h1><button class="iconbtn" data-a="shareMoney" aria-label="Share summary">${ic("share", 19)}</button><button class="iconbtn solid" data-a="addExpense" aria-label="Add expense">${ic("plus", 20, 2.4)}</button></header>
   ${seg}<div style="margin-top:16px">${body}</div>`;
 }
@@ -1994,11 +2028,12 @@ function vExpenses() {
   <div class="section" style="margin-top:12px">
     ${list.length ? `<div class="card list">${list.map(e => { const mine = shares(e)[S.me] || 0; return `
       <button class="exp" data-a="viewExpense" data-id="${e.id}">${ill(e.category, 50)}
-        <span class="t"><b>${esc(e.title)}</b><small>${CAT[e.category]} · ${fmtDate(e.date)}${e.orig ? " · " + fmtCur(e.orig.cur, e.orig.amt) : ""}</small><small>Paid by ${esc(nm(e.paidBy))}</small></span>
+        <span class="t"><b>${esc(e.title)}</b><small>${CAT[e.category]} · ${fmtDate(e.date)}${e.orig ? " · " + fmtCur(e.orig.cur, e.orig.amt) : ""}</small><small>${e.paidBy === POT ? "Paid from the kitty" : "Paid by " + esc(nm(e.paidBy))}</small></span>
         <span class="amt num">${money(e.amount)}<small class="muted">${mine ? "you " + money(mine) : "not in"}</small></span></button>`; }).join("")}</div>`
     : emptyState("wallet", "No expenses here", "Add the first bill. You choose who shares it each time.", "addExpense", "Add expense")}
   </div>
-  <div class="two" style="margin-top:18px"><button class="btn ghost" data-a="scanReceipt">${ic("camera", 18)} Scan receipt</button><button class="btn" data-a="addExpense">${ic("plus", 18, 2.4)} Add expense</button></div>`;
+  <div class="two" style="margin-top:18px"><button class="btn ghost" data-a="scanReceipt">${ic("camera", 18)} Scan receipt</button><button class="btn" data-a="addExpense">${ic("plus", 18, 2.4)} Add expense</button></div>
+  <div class="section"><button class="btn block ghost" data-a="history">${ic("history", 18)} Money changes${S.log.length ? ` · ${S.log.length}` : ""}</button></div>`;
 }
 function vBalances() {
   const net = balances(); const xs = suggest(net);
@@ -2114,7 +2149,7 @@ function refCard(kind, id) {
   if (kind === "task") { const t = S.tasks.find(x => x.id === id); if (!t) return gone("task");
     return `<button class="refcard" data-a="editTask" data-id="${t.id}">${ill("luggage", 40, 12)}<span><b>${esc(t.title)}</b><small>${t.done ? "Done" : "Open"} · ${esc(nm(t.assignee))}</small></span></button>`; }
   if (kind === "expense") { const e = S.expenses.find(x => x.id === id); if (!e) return gone("expense");
-    return `<button class="refcard" data-a="viewExpense" data-id="${e.id}">${ill(e.category, 40, 12)}<span><b>${esc(e.title)} · ${money(e.amount)}</b><small>Paid by ${esc(nm(e.paidBy))}</small></span></button>`; }
+    return `<button class="refcard" data-a="viewExpense" data-id="${e.id}">${ill(e.category, 40, 12)}<span><b>${esc(e.title)} · ${money(e.amount)}</b><small>${e.paidBy === POT ? "Paid from the kitty" : "Paid by " + esc(nm(e.paidBy))}</small></span></button>`; }
   if (kind === "route") { const r = S.routes.find(x => x.id === id); if (!r) return gone("route");
     return `<a class="refcard" href="${esc(gmapsUrl(r))}" target="_blank" rel="noopener" style="text-decoration:none">${ill("route", 40, 12)}<span><b>${esc(r.title)}</b><small>Open in Google Maps</small></span></a>`; }
   return "";
@@ -2253,10 +2288,10 @@ function openTask(id) {
 }
 
 /* Expense with optional foreign currency */
-function openExpense(id, mode = "manual") {
+function openExpense(id, mode = "manual", preset) {
   const e = id ? S.expenses.find(x => x.id === id) : null;
   F = e ? clone(e) : { id: null, title: "", amount: 0, date: todayISO(), paidBy: S.me, category: "food", note: "", split: { type: "equal", participants: S.members.map(m => m.id), custom: {} } };
-  F.mode = e ? "manual" : mode;
+  F.mode = e ? "manual" : mode; if (preset) Object.assign(F, preset);
   const cur = (e && e.orig && e.orig.cur) || "INR"; const amtVal = e ? (e.orig ? e.orig.amt / 100 : e.amount / 100) : "";
   const rate = (e && e.rate) || S.rates[cur] || "";
   openSheet(e ? "Edit expense" : "Add expense", `
@@ -2265,7 +2300,7 @@ function openExpense(id, mode = "manual") {
     <div id="scanBox" class="stack" ${F.mode === "scan" ? "" : "hidden"}>
       <div class="drop">${ill("other", 56)}<b style="color:var(--teal)">Take or choose a receipt photo</b><small class="muted">Tap here to use your camera or photo library</small><input type="file" id="f-receipt" accept="image/*" capture="environment" aria-label="Receipt photo"></div>
       <div id="rcptPreview" class="card" style="padding:10px;text-align:center" hidden></div>
-      <div class="note warm">${ic("info", 18)}<span>Automatic receipt reading isn't connected yet. Check the photo and type the details below. The photo isn't saved.</span></div>
+      <div class="note warm" id="rcptNote">${ic("info", 18)}<span>We'll try to read the total, date and place from the photo, right here on your phone. Always check before saving. The photo isn't saved or uploaded.</span></div>
     </div>
     <div class="field"><span class="flabel">Category</span>${pickRowCats("category", EXP_CATS, F.category)}</div>
     <div class="field"><label for="f-title">What was it?</label><input class="inp" id="f-title" value="${esc(F.title)}" placeholder="e.g. Dinner, fuel, tickets" maxlength="80"></div>
@@ -2273,9 +2308,9 @@ function openExpense(id, mode = "manual") {
       <div class="field"><label for="f-cur">Currency</label><select class="inp" id="f-cur">${Object.keys(CUR).map(c => `<option value="${c}" ${c === cur ? "selected" : ""}>${c} ${CUR[c].trim()}</option>`).join("")}</select></div></div>
     <div class="field" id="rateBox" ${cur === "INR" ? "hidden" : ""}><label for="f-rate">Rate the group agreed: 1 <span id="rateCur">${cur}</span> = ₹</label><input class="inp num" id="f-rate" inputmode="decimal" value="${rate}" placeholder="e.g. 2.45"><small class="muted" id="convNote"></small></div>
     <div class="field"><label for="f-date">Date</label><input class="inp" type="date" id="f-date" value="${esc(F.date)}"></div>
-    <div class="field"><span class="flabel">Paid by</span>${pickRowMembers("paidBy", F.paidBy)}</div>
+    <div class="field"><span class="flabel">Paid by</span>${S.pot ? pickRowMembers("paidBy", F.paidBy).replace(/<\/div>$/, `<button type="button" class="pk ${F.paidBy === POT ? "on" : ""}" data-a="pick" data-g="paidBy" data-v="${POT}">${av(POT, 40)}Kitty</button></div>`) : pickRowMembers("paidBy", F.paidBy)}</div>
     <div class="field"><span class="flabel">How should it be split?</span>
-      <div class="stack" style="gap:8px">${[["equal","Equal split","Everyone on the trip pays the same"],["participation","By participation","Only the people who took part, equally"],["custom","Custom amounts","Type what each person owes, in ₹"]].map(([k, l, s]) => `<button type="button" class="opt ${F.split.type === k ? "on" : ""}" data-a="expSplit" data-v="${k}"><span class="rad"></span><span><b>${l}</b><small>${s}</small></span></button>`).join("")}</div></div>
+      <div class="stack" style="gap:8px">${[["equal","Equal split","Everyone on the trip pays the same"],["participation","By participation","Only the people who took part, equally"],["group","By car or room","Fuel by car, rooms by who stayed in them"],["custom","Custom amounts","Type what each person owes, in ₹"]].map(([k, l, s]) => `<button type="button" class="opt ${F.split.type === k ? "on" : ""}" data-a="expSplit" data-v="${k}"><span class="rad"></span><span><b>${l}</b><small>${s}</small></span></button>`).join("")}</div></div>
     <div id="splitBox"></div>
     <div id="splitStatus"></div>
     <div class="field"><label for="f-note">Note (optional)</label><input class="inp" id="f-note" value="${esc(F.note)}" maxlength="120"></div>
@@ -2289,7 +2324,20 @@ function openExpense(id, mode = "manual") {
       const file = ev.target.files && ev.target.files[0]; if (!file) return;
       if (!file.type.startsWith("image/")) { toast("That file isn't a photo. Try a JPG or PNG.", "info"); return; }
       const r = new FileReader();
-      r.onload = () => { const pv = $("#rcptPreview"); pv.innerHTML = `<img src="${r.result}" alt="Receipt photo" style="max-height:220px;border-radius:12px;margin:0 auto"><div class="muted" style="font-size:13px;margin-top:6px">Photo added. Fill in the details below, or tap the box above to retake.</div>`; pv.hidden = false; $("#f-title").focus(); };
+      r.onload = async () => {
+        const pv = $("#rcptPreview"); pv.innerHTML = `<img src="${r.result}" alt="Receipt photo" style="max-height:220px;border-radius:12px;margin:0 auto"><div class="muted" id="rcptStatus" style="font-size:13px;margin-top:6px">Reading the receipt… The first time takes a little longer.</div>`; pv.hidden = false;
+        const stEl = () => $("#rcptStatus");
+        try {
+          const got = await readReceipt(r.result); if (!$("#expForm")) return;
+          const found = [];
+          if (got.total) { $("#f-amt").value = got.total / 100; $("#f-cur").value = "INR"; $("#rateBox").hidden = true; found.push(`total ${money(got.total)} (${got.how})`); }
+          if (got.date) { $("#f-date").value = got.date; found.push(`date ${fmtDate(got.date)}`); }
+          if (got.title && !$("#f-title").value.trim()) { $("#f-title").value = got.title; found.push(`"${got.title}"`); }
+          if (got.category && EXP_CATS.includes(got.category)) { F.category = got.category; const row = document.querySelector('[data-group="category"]'); if (row) row.querySelectorAll("[data-a=pick]").forEach(b => b.classList.toggle("on", b.dataset.v === got.category)); }
+          updateSplitStatus();
+          if (stEl()) stEl().innerHTML = found.length ? `<b>Read from the photo:</b> ${esc(found.join(", "))}. Check these before saving.` : "Couldn't read the details clearly. Type them below.";
+        } catch { if (stEl()) stEl().textContent = navigator.onLine ? "Couldn't read this photo. Type the details below." : "Receipt reading needs internet the first time. Type the details below."; }
+      };
       r.onerror = () => toast("Couldn't read that photo. Try another.", "info");
       r.readAsDataURL(file);
     });
@@ -2307,13 +2355,18 @@ function renderSplitBox() {
   const box = $("#splitBox"); if (!box) return;
   const t = F.split.type;
   if (t === "equal") F.split.participants = S.members.map(m => m.id);
+  if (t === "group" && !groupOf(F.split.group)) { const g0 = allGroups()[0]; F.split.group = g0 ? g0.id : ""; F.split.participants = g0 ? S.members.map(m => m.id).filter(id => g0.members.includes(id)) : []; }
+  const groupPick = t !== "group" ? "" : allGroups().length
+    ? `<div class="chips" style="margin-bottom:10px">${allGroups().map(g => `<button type="button" class="chip ${F.split.group === g.id ? "on" : ""}" data-a="expGroup" data-id="${g.id}">${ic(g.kind === "car" ? "car" : "suitcase", 16)} ${esc(g.name)}</button>`).join("")}</div>`
+    : `<div class="note warm" style="margin-bottom:10px">${ic("info", 18)}<span>No cars or rooms yet. Add them in Trip settings → Cars & rooms, then come back. For now, tick who took part.</span></div>`;
   if (t === "custom") {
     box.innerHTML = `<div class="card" style="padding:4px 12px">${S.members.map(m => `<div class="prow">${av(m.id, 30)}<span class="nm">${esc(nm(m.id))}</span><input class="custom-in num" data-id="${m.id}" inputmode="decimal" placeholder="₹0" value="${F.split.custom[m.id] ? F.split.custom[m.id] / 100 : ""}" aria-label="${esc(nmFull(m.id))} owes in rupees"></div>`).join("")}</div>`;
   } else {
     box.innerHTML = `<div class="card" style="padding:4px 12px">${S.members.map(m => {
       const inn = F.split.participants.includes(m.id);
-      return `<div class="prow">${t === "participation" ? `<button type="button" class="tog ${inn ? "on" : ""}" data-a="expPart" data-id="${m.id}" aria-pressed="${inn}" aria-label="${esc(nmFull(m.id))} took part">${ic("check", 15, 3)}</button>` : ""}${av(m.id, 30)}<span class="nm">${esc(nm(m.id))}</span><span class="sh num" data-id="${m.id}">–</span></div>`;
+      return `<div class="prow">${t === "participation" || t === "group" ? `<button type="button" class="tog ${inn ? "on" : ""}" data-a="expPart" data-id="${m.id}" aria-pressed="${inn}" aria-label="${esc(nmFull(m.id))} took part">${ic("check", 15, 3)}</button>` : ""}${av(m.id, 30)}<span class="nm">${esc(nm(m.id))}</span><span class="sh num" data-id="${m.id}">–</span></div>`;
     }).join("")}</div>`;
+    if (groupPick) box.innerHTML = groupPick + box.innerHTML;
   }
   updateSplitStatus();
 }
@@ -2355,7 +2408,14 @@ function saveExpense() {
   const rec = { id: F.id || uid("e"), title, amount, date: $("#f-date").value, paidBy: F.paidBy, category: F.category, note: $("#f-note").value.trim(), split: clone(F.split) };
   if (c !== "INR") { rec.orig = { cur: c, amt: Math.round(raw * 100) }; rec.rate = rate; S.rates[c] = rate; }
   if (F._o != null) rec._o = F._o;
-  const isNew = !F.id;
+  if (F.split.type === "group" && F.split.group) rec.split.group = F.split.group;
+  const isNew = !F.id; const before = isNew ? null : S.expenses.find(x => x.id === rec.id);
+  const changes = before ? expDiff(before, rec) : [];
+  if (isNew) logMoney("exp", "add", rec.id, rec.title, rec.amount);
+  else if (changes.length) logMoney("exp", "edit", rec.id, rec.title, rec.amount, { changes });
+  const shNew = shares(rec);
+  if (isNew) Object.keys(shNew).forEach(id => notify([id], `${S.trip.name}: new expense`, `${nmFull(S.me)} added ${rec.title} · ${money(rec.amount)}${rec.paidBy === POT ? " from the kitty" : ""}. Your share: ${money(shNew[id])}.`));
+  else if (changes.length) notify([...new Set([...Object.keys(shNew), ...Object.keys(shares(before))])], `${S.trip.name}: expense changed`, `${nmFull(S.me)} changed ${rec.title}: ${changes.join("; ")}.`);
   upsert(S.expenses, rec);
   UI.tab = "money"; UI.money = "exp"; closeSheet(); render();
   const l = S.budget[rec.category], sp = spentBy(rec.category);
@@ -2374,11 +2434,12 @@ function viewExpense(id) {
   <div class="stack">
     <div class="row" style="gap:14px">${ill(e.category, 72)}<div style="min-width:0"><div class="eyebrow">${CAT[e.category]} · ${fmtDate(e.date)}</div><h3 style="font-size:21px;color:var(--teal)">${esc(e.title)}</h3><div style="font-family:var(--font-d);font-size:28px;font-weight:800" class="num">${money(e.amount)}</div>
       ${e.orig ? `<div class="calc">${fmtCur(e.orig.cur, e.orig.amt)} at ₹${e.rate} per ${e.orig.cur}</div>` : ""}</div></div>
-    <div class="card" style="padding:12px 14px"><div class="row">${av(e.paidBy, 30)}<span><b>${esc(nm(e.paidBy))}</b> paid the full amount</span></div></div>
+    <div class="card" style="padding:12px 14px"><div class="row">${av(e.paidBy, 30)}<span>${e.paidBy === POT ? `Paid from the <b>trip kitty</b>` : `<b>${esc(nm(e.paidBy))}</b> paid the full amount`}</span></div></div>
     <div><div class="sec-h" style="margin-bottom:6px"><h2 style="font-size:16px">${esc(splitLabel(e))}</h2></div>
       <div class="card" style="padding:4px 12px">${lines.map(([k, v]) => `<div class="prow">${av(k, 28)}<span class="nm">${esc(nm(k))}${k === e.paidBy ? ' <small class="muted">(paid)</small>' : ""}</span><span class="sh num">${money(v)}</span></div>`).join("")}</div>
       <p class="calc" style="margin:8px 2px 0">${esc(why)} ${out.length ? `Not included: ${out.map(m => esc(nm(m.id))).join(", ")}.` : ""}</p></div>
     ${e.note ? `<div class="note warm">${ic("info", 18)}<span>${esc(e.note)}</span></div>` : ""}
+    ${(() => { const hs = S.log.filter(h => h.ref === e.id).sort((a, b) => b.at - a.at); return hs.length ? `<div><div class="sec-h" style="margin-bottom:6px"><h2 style="font-size:16px">History</h2></div><div class="card list">${hs.map(h => `<div class="bal" style="align-items:flex-start">${av(h.by, 26)}<span class="t" style="font-size:13.5px">${logLine(h)}<div class="muted" style="font-size:12px;font-weight:600">${timeAgo(h.at)}</div></span></div>`).join("")}</div></div>` : ""; })()}
     <button class="btn block" data-a="editExpense" data-id="${e.id}">${ic("edit", 17)} Edit expense</button>
     <div class="two"><button class="btn ghost" data-a="shareRef" data-k="expense" data-id="${e.id}">${ic("chat", 17)} Share in chat</button><button class="btn danger" data-a="delExpense" data-id="${e.id}">${ic("trash", 17)} Delete</button></div>
   </div>`);
@@ -2402,7 +2463,10 @@ function recordPay(from, to, amt) {
       if (isNaN(a) || a <= 0) return formErr("Enter an amount above ₹0.", "#f-amt");
       if (a > amt) return formErr(`That's more than the ${money(amt)} owed. Record the exact amount paid.`, "#f-amt");
       const confirmed = to === S.me;
-      S.settlements.push({ id: uid("s"), from, to, amount: a, date: $("#f-date").value || todayISO(), method: F.method, note: $("#f-note").value.trim(), status: confirmed ? "confirmed" : "pending", by: S.me });
+      const sr = { id: uid("s"), from, to, amount: a, date: $("#f-date").value || todayISO(), method: F.method, note: $("#f-note").value.trim(), status: confirmed ? "confirmed" : "pending", by: S.me };
+      S.settlements.push(sr); logMoney("pay", "add", sr.id, `${nmFull(from)} → ${nmFull(to)} payment`, a);
+      if (!confirmed) notify([to], `${S.trip.name}: payment to confirm`, `${nmFull(from)} paid you ${money(a)} by ${F.method}. Check and confirm it in Let's Go.`);
+      else notify([from], `${S.trip.name}: payment confirmed`, `${nmFull(to)} confirmed your ${money(a)} payment.`);
       closeSheet(); render(); toast(confirmed ? `Received ${money(a)} from ${nmFull(from)}. Balances updated.` : `Recorded. Waiting for ${nmFull(to)} to confirm.`);
     });
   });
@@ -2412,7 +2476,8 @@ function nudgeSheet(from, to, amt) {
   const text = `Hi ${nmFull(from)}! Quick reminder from our ${S.trip.name} trip: ${money(amt)} to ${to === S.me ? "me" : nmFull(to)} settles you up.${t && t.upi ? ` UPI: ${t.upi}` : ""} Thanks!`;
   openSheet("Send a friendly nudge", `<div class="stack">
     <div class="sharebox" id="shareText">${esc(text)}</div>
-    <button class="btn block" data-a="nudgeChat">${ic("chat", 18)} Post in trip chat</button>
+    ${mem(from) && mem(from).ntfy ? `<button class="btn block" data-a="nudgePush" data-from="${from}" data-to="${to}" data-amt="${amt}">${ic("bell", 18)} Send as a notification</button>` : ""}
+    <button class="btn block ${mem(from) && mem(from).ntfy ? "ghost" : ""}" data-a="nudgeChat">${ic("chat", 18)} Post in trip chat</button>
     <a class="btn block ghost" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">${ic("share", 18)} Send on WhatsApp</a>
     <button class="btn block ghost" data-a="copyShare">${ic("copy", 18)} Copy text</button>
     <p class="calc" style="margin:0">Nudges are always sent by you. Let's Go never messages anyone on its own.</p></div>`);
@@ -2576,12 +2641,16 @@ function tripSettings() {
     <div class="sec-h"><h2>Trip details</h2></div>
     <div class="field"><label for="f-name">Trip name</label><input class="inp" id="f-name" value="${esc(S.trip.name)}" maxlength="40"></div>
     <div class="field"><label for="f-dest">Destination</label><input class="inp" id="f-dest" value="${esc(S.trip.destination)}" maxlength="60"></div>
+    <div class="field"><label for="f-wx">Town for weather (optional)</label><input class="inp" id="f-wx" value="${esc(S.trip.wxPlace || "")}" maxlength="60" placeholder="e.g. Madikeri"><small class="muted">Use this if the destination is a region the forecast can't find.</small></div>
     <div class="two"><div class="field"><label for="f-start">Starts</label><input class="inp" type="date" id="f-start" value="${S.trip.start}"></div><div class="field"><label for="f-end">Ends</label><input class="inp" type="date" id="f-end" value="${S.trip.end}"></div></div>
     <div class="err" id="f-err" hidden></div>
     <button class="btn block" type="submit">Save trip details</button>
   </form>
   <div class="section"><div class="sec-h"><h2>People (${S.members.length})</h2><button class="link-btn" data-a="editMember" data-id="">+ Add person</button></div>
     <div class="card list">${S.members.map(m => `<button class="bal" style="width:100%;text-align:left" data-a="editMember" data-id="${m.id}">${av(m.id, 36)}<span class="t"><b>${esc(m.name)}${m.id === S.me ? " (you)" : ""}</b><div class="muted" style="font-size:12.5px;font-weight:600">${m.upi ? "UPI: " + esc(m.upi) : "No UPI ID added"}</div></span>${ic("chev", 18)}</button>`).join("")}</div></div>
+  ${notifySection()}
+  <div class="section"><div class="sec-h"><h2>Trip tools</h2></div>
+    <div class="two"><button class="btn ghost sm" data-a="groups">${ic("car", 16)} Cars & rooms</button><button class="btn ghost sm" data-a="essentials">${ic("shield", 16)} Essentials</button></div></div>
   <div class="section"><button class="btn block ghost" data-a="syncSheet">${ic("wifi", 18)} Sync & joining</button>
     <div class="two"><button class="btn ghost sm" data-a="tripsSheet">${ic("suitcase", 16)} My trips</button><button class="btn danger sm" data-a="delTrip">${ic("trash", 16)} Remove from my phone</button></div>
     <p class="calc" style="margin:0">${DB && T_remote() ? "This removes the trip from your phone only. Everyone else keeps it, and you can rejoin with the invite link." : "This removes the trip from this phone."}</p></div>`, () => {
@@ -2595,7 +2664,8 @@ function tripSettings() {
       if (nd > 30) return formErr("Trips can be up to 30 days long in this version.", "#f-end");
       const lost = S.ideas.filter(i => i.status === "confirmed" && i.day >= nd);
       lost.forEach(i => { i.status = "shortlisted"; i.day = null; i.time = ""; });
-      Object.assign(S.trip, { name, destination: $("#f-dest").value.trim(), start: s, end: e });
+      Object.assign(S.trip, { name, destination: $("#f-dest").value.trim(), start: s, end: e, wxPlace: $("#f-wx").value.trim() });
+      if (UI.wx) delete UI.wx[S.id]; setTimeout(() => loadWeather(true), 50);
       closeSheet(); render(); toast(lost.length ? `Saved. ${lost.length} activit${lost.length > 1 ? "ies" : "y"} moved back to the shortlist.` : "Trip updated");
     });
   });
@@ -2648,11 +2718,338 @@ function moneyText() {
   return t + "\n\nWorked out with Let's Go";
 }
 
+
+/* ============ v3 extras: kitty, change history, notifications, weather, receipt reading,
+   cars & rooms, reuse a trip, trip essentials ============ */
+const POT = "pot";
+const timeAgo = ts => { const s = Math.max(0, (Date.now() - ts) / 1000); if (s < 60) return "just now"; if (s < 3600) return Math.floor(s / 60) + "m ago"; if (s < 86400) return Math.floor(s / 3600) + "h ago"; if (s < 86400 * 7) return Math.floor(s / 86400) + "d ago"; const d = new Date(ts); return d.getDate() + " " + MON[d.getMonth()]; };
+
+/* ---- Trip kitty: one pot of shared cash, held by one person ---- */
+const kittyIn = () => S.kitty.filter(k => k.kind === "in").reduce((a, k) => a + k.amount, 0);
+const kittyBack = () => S.kitty.filter(k => k.kind === "out").reduce((a, k) => a + k.amount, 0);
+const kittySpent = () => S.expenses.filter(e => e.paidBy === POT).reduce((a, e) => a + e.amount, 0);
+const kittyLeft = () => kittyIn() - kittyBack() - kittySpent();
+const kittyHolder = () => S.pot && mem(S.pot.holder) ? S.pot.holder : "";
+function vKitty() {
+  if (!S.pot) return `<div class="card empty">${ill("wallet", 72)}<b>Pool money in a trip kitty</b>
+    <p>Everyone puts cash into one pot at the start. One person holds it and pays for fuel, tolls and snacks from it. Whatever's left is shared back at settle-up.</p>
+    <button class="btn sm" data-a="kittySetup">${ic("plus", 16, 2.4)} Start a kitty</button></div>`;
+  const h = kittyHolder(), inn = kittyIn(), left = kittyLeft(), spent = kittySpent();
+  const per = {}; S.kitty.filter(k => k.kind === "in").forEach(k => per[k.from] = (per[k.from] || 0) + k.amount);
+  const feed = [...S.kitty.map(k => ({ ts: k.ts || 0, date: k.date, html: `<div class="bal">${av(k.kind === "in" ? k.from : k.to, 32)}<span class="t"><b style="font-size:14.5px">${k.kind === "in" ? `${esc(nm(k.from))} put money in` : `Refund to ${esc(nm(k.to))}`}</b><div class="muted" style="font-size:12.5px;font-weight:600">${fmtDate(k.date)}${k.note ? " · " + esc(k.note) : ""}</div></span><span class="num" style="font-weight:700">${k.kind === "in" ? "+" : "−"}${money(k.amount)}</span><button class="iconbtn" data-a="delKitty" data-id="${k.id}" aria-label="Remove this record">${ic("trash", 16)}</button></div>` })),
+    ...S.expenses.filter(e => e.paidBy === POT).map(e => ({ ts: e._o || 0, date: e.date, html: `<button class="bal" style="width:100%;text-align:left" data-a="viewExpense" data-id="${e.id}">${ill(e.category, 32, 10)}<span class="t"><b style="font-size:14.5px">${esc(e.title)}</b><div class="muted" style="font-size:12.5px;font-weight:600">${fmtDate(e.date)} · paid from the kitty</div></span><span class="num" style="font-weight:700">−${money(e.amount)}</span></button>` }))]
+    .sort((a, b) => (b.date || "").localeCompare(a.date || "") || b.ts - a.ts);
+  const low = inn > 0 && left < inn * .15;
+  return `<div class="total">
+    <svg class="wallet" viewBox="0 0 64 64" aria-hidden="true">${artOf("wallet")}</svg>
+    <div class="lbl">In the kitty now</div><div class="big num">${money(left)}</div>
+    <div class="lbl" style="margin-top:2px">${h ? `Cash is with ${esc(nmFull(h))}` : "Pick who holds the cash"}</div>
+    <div class="mini3 num"><div><small>Put in</small><b>${money(inn)}</b></div><div><small>Spent</small><b>${money(spent)}</b></div><div><small>Refunded</small><b>${money(kittyBack())}</b></div></div>
+    ${inn ? `<div class="bar" style="margin-top:12px"><i class="${low ? "over" : ""}" style="width:${Math.max(0, Math.min(100, Math.round(left / inn * 100)))}%"></i></div>` : ""}
+  </div>
+  ${low ? `<div class="note warm" style="margin-top:12px">${ic("flag", 18)}<span>The kitty is running low. Collect another round before the next big spend.</span></div>` : ""}
+  <div class="two" style="margin-top:14px"><button class="btn" data-a="kittyCollect">${ic("money", 18)} Collect</button><button class="btn ghost" data-a="kittySpend">${ic("receipt", 18)} Spend from it</button></div>
+  <div class="section"><div class="sec-h"><h2>Who put in what</h2><button class="link-btn" data-a="kittyAdd">+ Add one</button></div>
+    <div class="card list">${S.members.map(m => `<div class="bal">${av(m.id, 34)}<span class="t"><b>${esc(nm(m.id))}</b>${m.id === h ? `<div class="muted" style="font-size:12.5px;font-weight:600">Holding the cash</div>` : ""}</span><span class="v num ${per[m.id] ? "" : "neg"}">${per[m.id] ? money(per[m.id]) : "Nothing yet"}</span></div>`).join("")}</div></div>
+  <div class="section"><div class="sec-h"><h2>Kitty activity</h2></div>
+    ${feed.length ? `<div class="card list">${feed.map(f => f.html).join("")}</div>` : `<div class="note">${ic("info", 18)}<span>Nothing in the kitty yet. Tap Collect money when everyone hands over their share.</span></div>`}</div>
+  <div class="note" style="margin-top:16px">${ic("info", 18)}<span>Spends from the kitty are split like any expense. The cash left over is counted in ${h ? esc(nmFull(h)) + "'s" : "the holder's"} balance, so Settle up shares it back automatically.</span></div>
+  <div class="section"><button class="btn block ghost" data-a="kittySetup">${ic("edit", 17)} Kitty settings</button></div>`;
+}
+function kittySetup() {
+  F = { holder: kittyHolder() || S.me };
+  openSheet(S.pot ? "Kitty settings" : "Start a kitty", `<form class="stack" id="kitForm">
+    <div class="field"><span class="flabel">Who holds the cash?</span>${pickRowMembers("holder", F.holder)}</div>
+    <div class="field"><label for="f-per">Suggested amount each (optional)</label><input class="inp num" id="f-per" inputmode="decimal" value="${S.pot && S.pot.per ? S.pot.per / 100 : ""}" placeholder="e.g. 3000"></div>
+    <div class="err" id="f-err" hidden></div>
+    <button class="btn block" type="submit">${S.pot ? "Save" : "Start the kitty"}</button>
+    ${S.pot ? `<button type="button" class="btn danger block" data-a="kittyEnd">${ic("trash", 17)} End the kitty</button><p class="calc" style="margin:0">You can end it once it's empty. Refund the leftover first, or settle up as usual.</p>` : ""}
+  </form>`, () => $("#kitForm").addEventListener("submit", ev => {
+    ev.preventDefault(); const p = $("#f-per").value.trim() ? toPaise($("#f-per").value) : 0;
+    if (isNaN(p) || p < 0) return formErr("Enter an amount, or leave it empty.", "#f-per");
+    const isNew = !S.pot; S.pot = { holder: F.holder, per: p || 0 };
+    closeSheet(); go("money", { money: "kitty" }); toast(isNew ? `Kitty started. ${nmFull(F.holder)} holds the cash.` : "Kitty updated");
+  }));
+}
+function kittyCollect() {
+  F = { picked: S.members.map(m => m.id) };
+  const draw = () => openSheet("Collect money", `<form class="stack" id="colForm">
+    <p class="calc" style="margin:0">Record what each person handed to ${esc(nmFull(kittyHolder()))}. Untick anyone who hasn't paid yet.</p>
+    <div class="field"><label for="f-each">Amount each (₹)</label><input class="inp num" id="f-each" inputmode="decimal" value="${S.pot.per ? S.pot.per / 100 : ""}" placeholder="e.g. 3000"></div>
+    <div class="card" style="padding:4px 12px">${S.members.map(m => `<div class="prow"><button type="button" class="tog ${F.picked.includes(m.id) ? "on" : ""}" data-a="colPick" data-id="${m.id}" aria-pressed="${F.picked.includes(m.id)}" aria-label="${esc(nmFull(m.id))} paid">${ic("check", 15, 3)}</button>${av(m.id, 30)}<span class="nm">${esc(nm(m.id))}</span></div>`).join("")}</div>
+    <div class="err" id="f-err" hidden></div>
+    <button class="btn block" type="submit">${ic("check", 18, 2.4)} Record payments</button>
+    ${notifyReady() ? `<button type="button" class="btn block ghost" data-a="kittyAsk">${ic("bell", 17)} Ask everyone to pay in</button>` : ""}
+  </form>`, () => $("#colForm").addEventListener("submit", ev => {
+    ev.preventDefault(); const a = toPaise($("#f-each").value);
+    if (isNaN(a) || a <= 0) return formErr("Enter the amount each person paid.", "#f-each");
+    if (!F.picked.length) return formErr("Tick at least one person.");
+    const date = todayISO();
+    F.picked.forEach(id => { const r = { id: uid("k"), kind: "in", from: id, amount: a, date, ts: Date.now(), by: S.me }; S.kitty.push(r); logMoney("kitty", "add", r.id, `${nmFull(id)} into the kitty`, a); });
+    if (!S.pot.per) S.pot.per = a;
+    closeSheet(); go("money", { money: "kitty" }); toast(`${money(a * F.picked.length)} added to the kitty`);
+  }));
+  F.redraw = draw; draw();
+}
+function kittyAdd() {
+  F = { from: S.me, kind: "in" };
+  openSheet("Kitty money", `<form class="stack" id="kaForm">
+    <div class="seg" data-group="kind">${[["in","Put money in"],["out","Refund from kitty"]].map(([k, l]) => `<button type="button" class="${F.kind === k ? "on" : ""}" data-a="pick" data-g="kind" data-v="${k}">${l}</button>`).join("")}</div>
+    <div class="field"><span class="flabel">Who?</span>${pickRowMembers("from", F.from)}</div>
+    <div class="two"><div class="field"><label for="f-amt">Amount (₹)</label><input class="inp num" id="f-amt" inputmode="decimal" value="${S.pot.per ? S.pot.per / 100 : ""}"></div><div class="field"><label for="f-date">Date</label><input class="inp" type="date" id="f-date" value="${todayISO()}"></div></div>
+    <div class="field"><label for="f-note">Note (optional)</label><input class="inp" id="f-note" maxlength="60"></div>
+    <div class="err" id="f-err" hidden></div>
+    <button class="btn block" type="submit">Save</button></form>`, () => $("#kaForm").addEventListener("submit", ev => {
+    ev.preventDefault(); const a = toPaise($("#f-amt").value);
+    if (isNaN(a) || a <= 0) return formErr("Enter an amount above ₹0.", "#f-amt");
+    if (F.kind === "out" && a > kittyLeft()) return formErr(`The kitty only has ${money(kittyLeft())}.`, "#f-amt");
+    const r = F.kind === "in" ? { id: uid("k"), kind: "in", from: F.from, amount: a, date: $("#f-date").value || todayISO(), ts: Date.now(), note: $("#f-note").value.trim(), by: S.me }
+      : { id: uid("k"), kind: "out", to: F.from, amount: a, date: $("#f-date").value || todayISO(), ts: Date.now(), note: $("#f-note").value.trim(), by: S.me };
+    S.kitty.push(r); logMoney("kitty", "add", r.id, F.kind === "in" ? `${nmFull(F.from)} into the kitty` : `Kitty refund to ${nmFull(F.from)}`, a);
+    closeSheet(); go("money", { money: "kitty" }); toast("Saved");
+  }));
+}
+
+/* ---- Change history for money ---- */
+function logMoney(kind, act, ref, title, amt, extra) {
+  const r = Object.assign({ id: uid("h"), at: Date.now(), by: S.me, kind, act, ref, title, amt: amt || 0 }, extra || {});
+  S.log.push(r);
+  if (S.log.length > 400) S.log.splice(0, S.log.length - 400);
+  return r;
+}
+function expDiff(a, b) {
+  const out = [];
+  if (a.title !== b.title) out.push(`Name "${a.title}" → "${b.title}"`);
+  if (a.amount !== b.amount) out.push(`Amount ${money(a.amount)} → ${money(b.amount)}`);
+  if (a.paidBy !== b.paidBy) out.push(`Paid by ${whoName(a.paidBy)} → ${whoName(b.paidBy)}`);
+  if (a.date !== b.date) out.push(`Date ${fmtDate(a.date)} → ${fmtDate(b.date)}`);
+  if (a.category !== b.category) out.push(`Category ${CAT[a.category]} → ${CAT[b.category]}`);
+  if (stable(a.split) !== stable(b.split)) out.push("Split changed");
+  if ((a.note || "") !== (b.note || "")) out.push("Note changed");
+  return out;
+}
+const whoName = id => id === POT ? "the kitty" : nmFull(id);
+const logLine = h => {
+  const who = h.by === S.me ? "You" : nmFull(h.by);
+  const verb = { add: "added", edit: "changed", delete: "deleted", restore: "restored", confirm: "confirmed" }[h.act] || h.act;
+  return `<b>${esc(who)}</b> ${verb} ${esc(h.title)}${h.amt && h.act !== "edit" ? " · " + money(h.amt) : ""}${h.changes && h.changes.length ? `<div class="calc" style="margin-top:2px">${h.changes.map(esc).join("<br>")}</div>` : ""}`;
+};
+function historySheet() {
+  const list = [...S.log].sort((a, b) => b.at - a.at).slice(0, 80);
+  openSheet("Money changes", `<div class="stack">
+    <p class="calc" style="margin:0">Every add, edit and delete to expenses, payments and the kitty, newest first. Deleted expenses can be brought back.</p>
+    ${list.length ? `<div class="card list">${list.map(h => `<div class="bal" style="align-items:flex-start">${av(h.by, 30)}<span class="t" style="font-size:14px">${logLine(h)}<div class="muted" style="font-size:12px;font-weight:600;margin-top:2px">${timeAgo(h.at)}</div></span>${h.act === "delete" && h.kind === "exp" && h.snap && !S.expenses.some(e => e.id === h.ref) ? `<button class="btn sm soft" data-a="restoreExp" data-id="${h.id}">Restore</button>` : ""}</div>`).join("")}</div>`
+      : `<div class="note">${ic("info", 18)}<span>No changes recorded yet. From now on, every money change shows up here.</span></div>`}
+  </div>`);
+}
+
+/* ---- Notifications through ntfy ---- */
+const NTFY = "https://ntfy.sh";
+const notifyReady = () => S.members.some(m => m.ntfy && m.id !== S.me);
+function notify(ids, title, message) {
+  const to = [...new Set(ids)].filter(id => id !== S.me).map(mem).filter(m => m && m.ntfy);
+  to.forEach(m => fetch(NTFY + "/", { method: "POST", body: JSON.stringify({ topic: m.ntfy, title: title.slice(0, 120), message: message.slice(0, 400), tags: ["airplane"], click: location.origin + location.pathname }) }).catch(() => {}));
+  return to.length;
+}
+function scheduleReminders() {
+  const m = S && mem(S.me); if (!m || !m.ntfy || !navigator.onLine) return;
+  UI.ntSched = UI.ntSched || {};
+  const dl = days(), now = Date.now();
+  dl.forEach((d, i) => {
+    const at = parseDate(d); at.setDate(at.getDate() - 1); at.setHours(20, 0, 0, 0);
+    const t = at.getTime(); if (t < now + 120000 || t > now + 3 * 86400000 - 3600000) return;
+    const key = S.id + ":" + d; if (UI.ntSched[key]) return;
+    const ev = dayEvents(i); const first = ev[0];
+    const msg = (first ? `First up: ${first.kind === "route" ? "Drive: " : ""}${first.title}${first.time ? " at " + fmtTime(first.time) : ""}. ` : "Nothing planned yet. ") + "Open Let's Go for the latest plan.";
+    fetch(NTFY + "/", { method: "POST", body: JSON.stringify({ topic: m.ntfy, title: `Tomorrow: ${S.trip.name}, Day ${i + 1}`, message: msg, delay: String(Math.floor(t / 1000)), tags: ["calendar"] }) })
+      .then(r => { if (r.ok) { UI.ntSched[key] = 1; save(); } }).catch(() => {});
+  });
+}
+function notifySection() {
+  const m = mem(S.me); if (!m) return "";
+  return `<div class="section"><div class="sec-h"><h2>Notifications</h2></div>
+    ${m.ntfy ? `<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+      <div class="row">${ic("bell", 18)}<b style="flex:1">On for ${esc(m.name)}</b><span class="pillt p-conf">On</span></div>
+      <ol class="calc" style="margin:0;padding-left:18px"><li>Install the free <b>ntfy</b> app from the App Store.</li><li>Tap <b>+</b>, keep the server as ntfy.sh, and subscribe to:<br><b class="num" style="overflow-wrap:anywhere">${esc(m.ntfy)}</b></li><li>Tap <b>Send test</b> below.</li></ol>
+      <div class="two"><button class="btn sm" data-a="ntTest">Send test</button><button class="btn sm ghost" data-a="ntCopy">${ic("copy", 16)} Copy topic</button></div>
+      <button class="btn sm ghost" data-a="ntOff">Turn off</button>
+      <p class="calc" style="margin:0;font-size:12.5px">You'll hear when someone adds an expense you're in, pays you, confirms your payment, or asks for kitty money, plus a reminder the evening before each trip day. Messages pass through the free ntfy.sh service. Your topic is random, but keep it to yourself.</p></div>`
+    : `<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px"><b>Get a ping when something changes</b><p class="calc" style="margin:0">New expenses you're in, payments to confirm, kitty requests and a reminder the night before each trip day. Uses the free ntfy app, so it works even when Let's Go is closed.</p><button class="btn" data-a="ntOn">${ic("bell", 18)} Turn on notifications</button></div>`}
+  </div>`;
+}
+
+/* ---- Weather from Open-Meteo (free, no key) ---- */
+const WX_LABEL = c => c === 0 ? "Clear" : c <= 2 ? "Partly cloudy" : c === 3 ? "Cloudy" : c <= 48 ? "Fog" : c <= 57 ? "Drizzle" : c <= 67 ? "Rain" : c <= 77 ? "Snow" : c <= 82 ? "Showers" : c <= 86 ? "Snow showers" : "Thunderstorms";
+const WX_ICON = (c, rain) => c >= 51 || rain >= 60 ? "rain" : c <= 1 ? "sun" : "cloud";
+let wxBusy = false;
+function wxPlace() { return (S.trip.wxPlace || S.trip.destination || "").trim(); }
+function wxData() { const w = UI.wx && UI.wx[S.id]; return w && w.place === wxPlace() ? w : null; }
+async function loadWeather(force) {
+  if (!S) return;
+  const place = wxPlace(); if (!place || wxBusy || !navigator.onLine) return;
+  const cur = wxData(); if (!force && cur && Date.now() - cur.at < 3 * 3600000) return;
+  loadWeather.tried = loadWeather.tried || {}; if (!force && Date.now() - (loadWeather.tried[S.id] || 0) < 600000) return; loadWeather.tried[S.id] = Date.now();
+  const dl = days(); const ahead = (parseDate(dl[0]) - parseDate(todayISO())) / 86400000;
+  if (ahead > 15 || (parseDate(dl[dl.length - 1]) - parseDate(todayISO())) / 86400000 < 0) { UI.wx = UI.wx || {}; UI.wx[S.id] = { place, at: Date.now(), days: {}, far: ahead > 15 }; return; }
+  wxBusy = true;
+  try {
+    const tries = [place, place.split(",")[0], place.split(",").slice(-1)[0]].map(x => x.trim()).filter((x, i, a) => x && a.indexOf(x) === i);
+    let g = null;
+    for (const q of tries) { const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&format=json&name=${encodeURIComponent(q)}`); const j = await r.json(); if (j.results && j.results[0]) { g = j.results[0]; break; } }
+    UI.wx = UI.wx || {};
+    if (!g) { UI.wx[S.id] = { place, at: Date.now(), days: {}, notFound: true }; return; }
+    const s = dl[0] < todayISO() ? todayISO() : dl[0];
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.latitude}&longitude=${g.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&start_date=${s}&end_date=${dl[dl.length - 1]}`);
+    const j = await r.json(); const out = {};
+    (j.daily && j.daily.time || []).forEach((t, i) => out[t] = { c: j.daily.weather_code[i], hi: Math.round(j.daily.temperature_2m_max[i]), lo: Math.round(j.daily.temperature_2m_min[i]), rain: j.daily.precipitation_probability_max[i] || 0 });
+    UI.wx[S.id] = { place, at: Date.now(), days: out, name: g.name + (g.admin1 ? ", " + g.admin1 : "") };
+    save(); render(true);
+  } catch { /* offline or blocked: try again later */ }
+  finally { wxBusy = false; }
+}
+function wxLine(iso, big) {
+  const w = wxData(); if (!w) return "";
+  const d = w.days[iso];
+  if (!d) {
+    if (w.notFound) return `<div class="note" style="margin-top:12px">${ic("cloud", 18)}<span>Couldn't find weather for "${esc(wxPlace())}". <button class="link-btn" data-a="tripSettings">Set a nearby town</button></span></div>`;
+    if (w.far && big) return `<div class="note" style="margin-top:12px">${ic("cloud", 18)}<span>The forecast shows up here about two weeks before the trip.</span></div>`;
+    return "";
+  }
+  const tip = d.rain >= 60 ? " Carry umbrellas or rain jackets." : d.hi >= 35 ? " It'll be hot. Carry water and caps." : d.lo <= 8 ? " Cold night. Pack warm layers." : "";
+  return `<div class="note wx" style="margin-top:12px">${ic(WX_ICON(d.c, d.rain), 20)}<span><b>${WX_LABEL(d.c)} · ${d.lo}–${d.hi}°C</b>${d.rain ? ` · ${d.rain}% chance of rain` : ""}${tip ? `<br>${tip.trim()}` : ""}<br><small class="muted">${esc(w.name || wxPlace())} · Open-Meteo forecast</small></span></div>`;
+}
+
+/* ---- Receipt reading on the phone (Tesseract.js) ---- */
+let tessP = null;
+const loadTess = () => tessP || (tessP = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"; s.onload = () => res(window.Tesseract); s.onerror = () => { tessP = null; rej(new Error("load")); }; document.head.appendChild(s); }));
+async function readReceipt(dataUrl) {
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = dataUrl; });
+  const k = Math.min(1, 1600 / Math.max(img.width, img.height)); const c = document.createElement("canvas");
+  c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+  const x = c.getContext("2d"); x.filter = "grayscale(1) contrast(1.3)"; x.drawImage(img, 0, 0, c.width, c.height);
+  const T = await loadTess();
+  const w = await T.createWorker("eng");
+  try { const r = await w.recognize(c); return parseReceipt(r.data.text || ""); } finally { w.terminate(); }
+}
+function parseReceipt(text) {
+  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+  const nums = l => (l.match(/\d{1,3}(?:,\d{2,3})+(?:\.\d{1,2})?|\d+\.\d{1,2}|\d+/g) || []).map(n => parseFloat(n.replace(/,/g, ""))).filter(n => isFinite(n));
+  let total = 0, how = "";
+  const pick = re => { for (let i = lines.length - 1; i >= 0; i--) { if (re.test(lines[i]) && !/sub\s*-?\s*total/i.test(lines[i])) { const n = nums(lines[i]).filter(v => v > 0 && v < 1e7); if (n.length) return n[n.length - 1]; } } return 0; };
+  total = pick(/grand\s*total|net\s*(amount|payable|total)|amount\s*(payable|due)|total\s*(amount|payable|due|rs|inr|₹)|bill\s*amount/i); if (total) how = "grand total";
+  if (!total) { total = pick(/\btotal\b|\bamount\b/i); if (total) how = "total"; }
+  if (!total) { const d = lines.flatMap(l => /phone|ph\.|gst|tin|mob|tel|invoice|bill\s*no/i.test(l) ? [] : (l.match(/\d+\.\d{2}\b/g) || []).map(Number)); if (d.length) { total = Math.max(...d); how = "largest amount"; } }
+  let date = "";
+  const dm = text.match(/\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})\b/);
+  if (dm) { let [_, dd, mm, yy] = dm; yy = yy.length === 2 ? "20" + yy : yy; const iso = `${yy}-${pad(+mm)}-${pad(+dd)}`; if (+mm >= 1 && +mm <= 12 && +dd >= 1 && +dd <= 31 && +yy >= 2020 && +yy <= 2100) date = iso; }
+  const nameLine = lines.find(l => (l.match(/[A-Za-z]/g) || []).length >= 4 && !/invoice|receipt|bill|gst|tax|tin|date|cash|phone|ph\b|tel|www|@/i.test(l)) || "";
+  const title = nameLine.replace(/[^A-Za-z0-9&'.\- ]/g, " ").replace(/\s+/g, " ").trim().slice(0, 40).toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  const t = text.toLowerCase();
+  const category = /petrol|diesel|fuel|hpcl|bpcl|indian oil|iocl|shell|nayara/.test(t) ? "fuel" : /toll|fastag|parking|cab|taxi|uber|ola\b|bus|railway|irctc/.test(t) ? "transport" : /mart|super ?market|grocer|kirana|provision|dmart|reliance fresh|more\b/.test(t) ? "groceries" : /restaurant|cafe|café|kitchen|dhaba|biryani|food|bar\b|bakery|meals|veg|chicken|paneer|coffee|tea\b|curry|roti|naan|thali|dosa|idli|biriyani|juice/.test(t) ? "food" : /resort|homestay|lodge|stay|room|check-?in/.test(t) ? "stay" : /ticket|entry|admission|safari|rafting/.test(t) ? "activity" : "";
+  return { total: Math.round(total * 100), how, date, title, category };
+}
+
+/* ---- Cars and rooms ---- */
+const allGroups = () => [...S.groups.cars.map(g => Object.assign({ kind: "car" }, g)), ...S.groups.rooms.map(g => Object.assign({ kind: "room" }, g))];
+const groupOf = id => allGroups().find(g => g.id === id);
+function groupsSheet() {
+  const row = (g, kind) => `<button class="bal" style="width:100%;text-align:left" data-a="editGroup" data-id="${g.id}" data-k="${kind}">${ill(kind === "car" ? "transport" : "stay", 36, 12)}<span class="t"><b>${esc(g.name)}</b><div style="margin-top:4px">${avs(g.members, 22, 6)}</div></span>${ic("chev", 18)}</button>`;
+  openSheet("Cars & rooms", `<div class="stack">
+    <p class="calc" style="margin:0">Say who's in which car and who's in which room once. Then fuel, tolls and room bills split with one tap.</p>
+    <div class="sec-h"><h2>Cars</h2><button class="link-btn" data-a="editGroup" data-id="" data-k="car">+ Add car</button></div>
+    ${S.groups.cars.length ? `<div class="card list">${S.groups.cars.map(g => row(g, "car")).join("")}</div>` : `<div class="note">${ic("info", 18)}<span>No cars yet.</span></div>`}
+    <div class="sec-h"><h2>Rooms</h2><button class="link-btn" data-a="editGroup" data-id="" data-k="room">+ Add room</button></div>
+    ${S.groups.rooms.length ? `<div class="card list">${S.groups.rooms.map(g => row(g, "room")).join("")}</div>` : `<div class="note">${ic("info", 18)}<span>No rooms yet.</span></div>`}
+  </div>`);
+}
+function editGroup(id, kind) {
+  const list = S.groups[kind === "car" ? "cars" : "rooms"]; const g = id ? list.find(x => x.id === id) : null;
+  F = { gid: id, gkind: kind, picked: g ? g.members.slice() : [] };
+  openSheet(g ? g.name : kind === "car" ? "Add a car" : "Add a room", `<form class="stack" id="grpForm">
+    <div class="field"><label for="f-gname">Name</label><input class="inp" id="f-gname" maxlength="30" value="${esc(g ? g.name : (kind === "car" ? `Car ${list.length + 1}` : `Room ${list.length + 1}`))}"></div>
+    <div class="field"><span class="flabel">Who's in it?</span><div class="card" style="padding:4px 12px">${S.members.map(m => `<div class="prow"><button type="button" class="tog ${F.picked.includes(m.id) ? "on" : ""}" data-a="grpPick" data-id="${m.id}" aria-pressed="${F.picked.includes(m.id)}" aria-label="${esc(nmFull(m.id))}">${ic("check", 15, 3)}</button>${av(m.id, 30)}<span class="nm">${esc(nm(m.id))}</span></div>`).join("")}</div></div>
+    <div class="err" id="f-err" hidden></div>
+    <button class="btn block" type="submit">Save</button>
+    ${g ? `<button type="button" class="btn danger block" data-a="delGroup" data-id="${g.id}" data-k="${kind}">${ic("trash", 17)} Remove</button>` : ""}
+  </form>`, () => $("#grpForm").addEventListener("submit", ev => {
+    ev.preventDefault(); const name = $("#f-gname").value.trim();
+    if (!name) return formErr("Give it a name.", "#f-gname");
+    if (!F.picked.length) return formErr("Pick at least one person.");
+    const members = S.members.map(m => m.id).filter(x => F.picked.includes(x));
+    if (g) Object.assign(g, { name, members }); else list.push({ id: uid("g"), name, members });
+    save(); groupsSheet(); toast("Saved");
+  }));
+}
+
+/* ---- Trip essentials ---- */
+const mapsSearch = q => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
+const telOf = p => "tel:" + String(p).replace(/[^\d+]/g, "");
+function essentialsSheet() {
+  const E = S.essentials, st = E.stay || {};
+  const stays = S.bookings.filter(b => b.type === "stay");
+  const near = st.address || S.trip.destination || "";
+  openSheet("Trip essentials", `<div class="stack">
+    <div class="note">${ic("info", 18)}<span>Saved on this phone, so it opens without signal. Everyone in the trip can see and edit it.</span></div>
+    <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px">
+      <div class="eyebrow">Where we're staying</div>
+      ${st.name || st.address ? `<b style="font-size:17px">${esc(st.name || "Our stay")}</b>${st.address ? `<div class="calc">${esc(st.address)}</div>` : ""}${st.checkin ? `<div class="calc">Check-in ${esc(fmtTime(st.checkin))}${st.checkout ? ` · Check-out ${esc(fmtTime(st.checkout))}` : ""}</div>` : ""}
+        <div class="two">${st.address ? `<a class="btn sm" href="${esc(mapsSearch(st.address))}" target="_blank" rel="noopener">${ic("nav", 16)} Directions</a>` : ""}${st.phone ? `<a class="btn sm soft" href="${esc(telOf(st.phone))}">${ic("bell", 16)} Call stay</a>` : ""}</div>`
+      : `<p class="calc" style="margin:0">Add the address and phone number of your stay.</p>`}
+      ${stays.length ? `<div class="calc" style="font-size:12.5px">Booking${stays.length > 1 ? "s" : ""}: ${stays.map(b => esc(b.title) + (b.ref ? " (" + esc(b.ref) + ")" : "")).join(", ")}</div>` : ""}
+    </div>
+    <div class="card list">
+      <div class="bal"><span class="t"><b>Emergency (police, fire, ambulance)</b><div class="muted" style="font-size:12.5px;font-weight:600">India · 112</div></span><a class="btn sm danger" href="tel:112">Call 112</a></div>
+      <div class="bal"><span class="t"><b>Ambulance</b><div class="muted" style="font-size:12.5px;font-weight:600">India · 108</div></span><a class="btn sm soft" href="tel:108">Call 108</a></div>
+      ${near ? `<div class="bal"><span class="t"><b>Nearest hospital</b><div class="muted" style="font-size:12.5px;font-weight:600">Search near ${esc(near)}</div></span><a class="btn sm soft" href="${esc(mapsSearch("hospital near " + near))}" target="_blank" rel="noopener">${ic("pin", 16)} Find</a></div>` : ""}
+      ${(E.contacts || []).map(c => `<div class="bal"><span class="t"><b>${esc(c.name)}</b><div class="muted" style="font-size:12.5px;font-weight:600">${esc(c.note || "")}${c.phone ? (c.note ? " · " : "") + esc(c.phone) : ""}</div></span>${c.phone ? `<a class="btn sm soft" href="${esc(telOf(c.phone))}">Call</a>` : ""}</div>`).join("")}
+    </div>
+    ${E.notes ? `<div class="note warm">${ic("info", 18)}<span style="white-space:pre-line">${esc(E.notes)}</span></div>` : ""}
+    <button class="btn block ghost" data-a="editEssentials">${ic("edit", 17)} Edit essentials</button>
+    <p class="calc" style="margin:0;font-size:12.5px">Hospital search opens Google Maps, which needs signal. Numbers are for India.</p>
+  </div>`);
+}
+function editEssentials() {
+  const E = S.essentials, st = E.stay || {};
+  F = { contacts: clone(E.contacts || []) };
+  const crow = (c, i) => `<div class="card" style="padding:10px 12px;display:grid;gap:8px"><div class="two"><input class="inp" data-c="${i}" data-f="name" value="${esc(c.name || "")}" placeholder="Name" maxlength="40"><input class="inp" data-c="${i}" data-f="phone" value="${esc(c.phone || "")}" placeholder="Phone" inputmode="tel" maxlength="20"></div><input class="inp" data-c="${i}" data-f="note" value="${esc(c.note || "")}" placeholder="Who is this? e.g. Homestay host, Rahul's dad" maxlength="50"></div>`;
+  openSheet("Edit essentials", `<form class="stack" id="essForm">
+    <div class="sec-h"><h2>Stay</h2></div>
+    <div class="field"><label for="es-name">Name</label><input class="inp" id="es-name" value="${esc(st.name || "")}" maxlength="60"></div>
+    <div class="field"><label for="es-addr">Address</label><input class="inp" id="es-addr" value="${esc(st.address || "")}" maxlength="140"></div>
+    <div class="field"><label for="es-phone">Phone</label><input class="inp" id="es-phone" inputmode="tel" value="${esc(st.phone || "")}" maxlength="20"></div>
+    <div class="two"><div class="field"><label for="es-in">Check-in</label><input class="inp" type="time" id="es-in" value="${esc(st.checkin || "")}"></div><div class="field"><label for="es-out">Check-out</label><input class="inp" type="time" id="es-out" value="${esc(st.checkout || "")}"></div></div>
+    <div class="sec-h"><h2>Contacts</h2><button type="button" class="link-btn" data-a="essAddContact">+ Add</button></div>
+    <div class="stack" id="essContacts" style="gap:10px">${F.contacts.map(crow).join("") || `<p class="calc" style="margin:0">Add the host, driver, or a family contact for emergencies.</p>`}</div>
+    <div class="field"><label for="es-notes">Notes</label><textarea class="inp" id="es-notes" rows="3" maxlength="400" placeholder="Wi-Fi, gate code, nearest ATM…">${esc(E.notes || "")}</textarea></div>
+    <p class="calc" style="margin:0;font-size:12.5px">Don't add ID numbers, card numbers or passwords.</p>
+    <button class="btn block" type="submit">Save</button></form>`, () => {
+    $("#essForm").addEventListener("submit", ev => {
+      ev.preventDefault();
+      document.querySelectorAll("#essContacts [data-c]").forEach(el => { F.contacts[+el.dataset.c][el.dataset.f] = el.value.trim(); });
+      S.essentials = { stay: { name: $("#es-name").value.trim(), address: $("#es-addr").value.trim(), phone: $("#es-phone").value.trim(), checkin: $("#es-in").value, checkout: $("#es-out").value },
+        contacts: F.contacts.filter(c => c.name || c.phone).map(c => ({ id: c.id || uid("p"), name: c.name || "Contact", phone: c.phone || "", note: c.note || "" })), notes: $("#es-notes").value.trim() };
+      essentialsSheet(); render(); toast("Essentials saved");
+    });
+    F.crow = crow;
+  });
+}
+
+/* ---- Start a new trip from an old one ---- */
+function copyFromTrip(T, src, opts) {
+  if (opts.people) { T.members = clone(src.members); const me = src.members.find(m => m.id === src.me); if (me) { T.me = me.id; const mine = T.members.find(m => m.id === me.id); if (mine && opts.myName) mine.name = opts.myName; } }
+  if (opts.kit) T.kit = src.kit.map(k => ({ id: uid("k"), name: k.name, by: opts.people && T.members.some(m => m.id === k.by) ? k.by : "", packed: false }));
+  if (opts.tasks) T.tasks = src.tasks.map(t => ({ id: uid("t"), title: t.title, notes: t.notes || "", assignee: opts.people && T.members.some(m => m.id === t.assignee) ? t.assignee : "", createdBy: T.me, due: "", priority: t.priority || "normal", done: false }));
+  if (opts.people && src.groups) T.groups = clone(src.groups);
+  if (opts.budget) T.budget = clone(src.budget || {});
+  let o = 1; SYNCED.forEach(k => (T[k] || []).forEach(x => x._o = o++));
+  return T;
+}
+
 /* ============ Actions ============ */
 const A = {
   tab: d => go(d.v), closeSheet,
   goMoneyBal: () => go("money", { money: "bal" }), goMyTasks: () => go("tasks", { taskView: "todo", taskF: "assigned" }), goTasks: () => go("tasks", { taskView: "todo", taskF: "all" }),
-  goIdeas: () => go("plan", { plan: "ideas" }), goPacking: () => go("tasks", { taskView: "kit" }), goBudget: () => go("money", { money: "budget" }),
+  goIdeas: () => go("plan", { plan: "ideas" }), goPacking: () => go("tasks", { taskView: "kit" }), goBudget: () => go("money", { money: "budget" }), goKitty: () => go("money", { money: "kitty" }),
   planSeg: d => { UI.plan = d.v; render(); }, pickDay: d => { UI.day = +d.v; render(); }, ideaCat: d => { UI.ideaCat = d.v; render(); }, savedSeg: d => { UI.saved = d.v; render(); },
   taskView: d => { UI.taskView = d.v; render(); }, taskF: d => { UI.taskF = d.v; render(); }, moneySeg: d => { UI.money = d.v; render(); }, expF: d => { UI.expF = d.v; render(); },
   todaySim: () => { UI.todaySim = !UI.todaySim; render(); if (UI.todaySim) toast("Previewing Day 2 at 4:15 AM", "clock"); },
@@ -2694,7 +3091,9 @@ const A = {
   kitDel: (d, el) => { if (!confirmTap(el, "?")) return; S.kit = S.kit.filter(x => x.id !== d.id); render(); toast("Removed from the list"); },
   addExpense: () => { closeIfOpen(); openExpense(null, "manual"); }, scanReceipt: () => { closeIfOpen(); openExpense(null, "scan"); },
   editExpense: d => { closeIfOpen(); openExpense(d.id); }, viewExpense: d => { closeIfOpen(); viewExpense(d.id); },
-  delExpense: (d, el) => { if (!confirmTap(el, "Tap again to delete")) return; S.expenses = S.expenses.filter(x => x.id !== d.id); closeSheet(); render(); toast("Expense deleted. Balances recalculated."); },
+  delExpense: (d, el) => { if (!confirmTap(el, "Tap again to delete")) return; const e = S.expenses.find(x => x.id === d.id); S.expenses = S.expenses.filter(x => x.id !== d.id);
+    if (e) { logMoney("exp", "delete", e.id, e.title, e.amount, { snap: clone(e) }); notify(Object.keys(shares(e)), `${S.trip.name}: expense deleted`, `${nmFull(S.me)} deleted ${e.title} (${money(e.amount)}). You can see it in Money changes.`); }
+    closeSheet(); render(); toast("Expense deleted. You can restore it from Money changes."); },
   expMode: (d, el) => { F.mode = d.v; el.parentElement.querySelectorAll("button").forEach(b => b.classList.toggle("on", b === el)); $("#scanBox").hidden = d.v !== "scan"; },
   expSplit: (d, el) => { if (F.split.type === "custom" && d.v !== "custom") F.split.participants = S.members.map(m => m.id);
     if (d.v === "custom" && !Object.keys(F.split.custom).length) F.split.custom = shares(Object.assign({}, F, { amount: draftAmount(), split: Object.assign({}, F.split, { type: "participation" }) }));
@@ -2711,7 +3110,7 @@ const A = {
   saveTrips: () => { closeIfOpen(); shareSheet("Save my trips", tripLinksText()); },
   recordPay: d => recordPay(d.from, d.to, +d.amt), nudge: d => nudgeSheet(d.from, d.to, +d.amt),
   nudgeChat: () => { postMsg({ text: F.shareText }); closeSheet(); go("chat"); toast("Nudge posted in chat"); },
-  delSettle: (d, el) => { if (!confirmTap(el, "Sure?")) return; S.settlements = S.settlements.filter(x => x.id !== d.id); render(); toast("Payment record removed"); },
+  delSettle: (d, el) => { if (!confirmTap(el, "Sure?")) return; const sx = S.settlements.find(x => x.id === d.id); if (sx) logMoney("pay", "delete", sx.id, `${nmFull(sx.from)} → ${nmFull(sx.to)} payment`, sx.amount, { snap: clone(sx) }); S.settlements = S.settlements.filter(x => x.id !== d.id); render(); toast("Payment record removed"); },
   editBudget: () => { closeIfOpen(); editBudget(); },
   copyUpi: d => copyText(mem(d.id).upi, "UPI ID copied"),
   editMember: d => { closeIfOpen(); editMember(d.id || null); },
@@ -2754,13 +3153,48 @@ const A = {
   addDemo: () => { const T = seed(); STORE.trips[T.id] = T; switchTrip(T.id); toast("Demo trip added. Have a look around."); },
   delTrip: (d, el) => { if (!confirmTap(el, "Tap again to remove")) return; const name = S.trip.name; closeSheet(); deleteTrip(S.id); toast(`Removed ${name} from your phone`); },
   payNow: d => { closeIfOpen(); paySheet(d.to, +d.amt); },
-  iPaid: d => { S.settlements.push({ id: uid("s"), from: S.me, to: d.to, amount: +d.amt, date: todayISO(), method: "UPI", note: "", status: "pending", by: S.me }); postMsg({ text: `I've paid ${nmFull(d.to)} ${money(+d.amt)} by UPI. Please confirm in Money when it arrives.` }); closeSheet(); render(); toast(`Marked as paid. ${nmFull(d.to)} will confirm.`); },
+  iPaid: d => { const sr = { id: uid("s"), from: S.me, to: d.to, amount: +d.amt, date: todayISO(), method: "UPI", note: "", status: "pending", by: S.me }; S.settlements.push(sr);
+    logMoney("pay", "add", sr.id, `${nmFull(S.me)} → ${nmFull(d.to)} payment`, +d.amt); notify([d.to], `${S.trip.name}: payment to confirm`, `${nmFull(S.me)} says they paid you ${money(+d.amt)} by UPI. Check your bank and confirm in Let's Go.`); postMsg({ text: `I've paid ${nmFull(d.to)} ${money(+d.amt)} by UPI. Please confirm in Money when it arrives.` }); closeSheet(); render(); toast(`Marked as paid. ${nmFull(d.to)} will confirm.`); },
   confirmSheet: d => { closeIfOpen(); confirmSheet(d.id); },
   confirmFirst: () => { const p = S.settlements.find(x => x.status === "pending" && x.to === S.me); if (p) confirmSheet(p.id); },
-  confirmPay: d => { const p = S.settlements.find(x => x.id === d.id); if (!p) return; p.status = "confirmed"; p.confirmedOn = todayISO(); closeSheet(); render(); toast(`Confirmed ${money(p.amount)} from ${nmFull(p.from)}. Balances updated.`); },
+  confirmPay: d => { const p = S.settlements.find(x => x.id === d.id); if (!p) return; p.status = "confirmed"; p.confirmedOn = todayISO();
+    logMoney("pay", "confirm", p.id, `${nmFull(p.from)} → ${nmFull(p.to)} payment`, p.amount); notify([p.from], `${S.trip.name}: payment confirmed`, `${nmFull(S.me)} confirmed your ${money(p.amount)} payment.`); closeSheet(); render(); toast(`Confirmed ${money(p.amount)} from ${nmFull(p.from)}. Balances updated.`); },
   rejectPay: (d, el) => { if (!confirmTap(el, "Tap again: not received")) return; const p = S.settlements.find(x => x.id === d.id); if (!p) return; S.settlements = S.settlements.filter(x => x.id !== d.id); postMsg({ text: `${nmFull(S.me)} hasn't received the ${money(p.amount)} from ${nmFull(p.from)} yet. Could you check?` }); closeSheet(); render(); toast("Marked as not received. A note was posted in chat.", "info"); },
   copyAmt: d => copyText((+d.v / 100).toFixed(2), "Amount copied")
 };
+
+Object.assign(A, {
+  kittySetup: () => { closeIfOpen(); kittySetup(); },
+  kittyCollect: () => { closeIfOpen(); if (!S.pot) return kittySetup(); kittyCollect(); },
+  kittyAdd: () => { closeIfOpen(); kittyAdd(); },
+  kittySpend: () => { closeIfOpen(); openExpense(null, "manual", { paidBy: POT }); },
+  kittyEnd: (d, el) => { if (kittyLeft() !== 0) { toast(`The kitty still has ${money(kittyLeft())}. Refund it or spend it first.`, "info"); return; } if (!confirmTap(el, "Tap again to end")) return; S.pot = null; closeSheet(); render(); toast("Kitty ended. Its records stay in the history."); },
+  kittyAsk: () => { const h = kittyHolder(); const a = toPaise(($("#f-each") || {}).value || 0) || (S.pot && S.pot.per) || 0;
+    const n = notify(F.picked || S.members.map(m => m.id), `Trip kitty: ${S.trip.name}`, `${nmFull(S.me)} is collecting ${a ? money(a) + " each" : "money"} for the trip kitty. Please hand it to ${h === S.me ? nmFull(S.me) : nmFull(h)}.`);
+    toast(n ? `Asked ${n} ${n === 1 ? "person" : "people"} with notifications on` : "Nobody has notifications on yet", n ? "bell" : "info"); },
+  colPick: d => { const p = F.picked; const k = p.indexOf(d.id); if (k >= 0) p.splice(k, 1); else p.push(d.id); const el = document.querySelector(`[data-a=colPick][data-id="${d.id}"]`); if (el) { el.classList.toggle("on", k < 0); el.setAttribute("aria-pressed", String(k < 0)); } },
+  delKitty: (d, el) => { if (!confirmTap(el, "Sure?")) return; const r = S.kitty.find(x => x.id === d.id); if (!r) return; S.kitty = S.kitty.filter(x => x.id !== d.id); logMoney("kitty", "delete", r.id, r.kind === "in" ? `${nmFull(r.from)}'s kitty money` : `Kitty refund to ${nmFull(r.to)}`, r.amount, { snap: r }); render(); toast("Removed"); },
+  history: () => { closeIfOpen(); historySheet(); },
+  restoreExp: d => { const h = S.log.find(x => x.id === d.id); if (!h || !h.snap) return; if (S.expenses.some(e => e.id === h.ref)) { toast("That expense is already back.", "info"); return; }
+    S.expenses.push(clone(h.snap)); logMoney("exp", "restore", h.ref, h.snap.title, h.snap.amount); closeSheet(); render(); toast(`${h.snap.title} is back. Balances recalculated.`); },
+  ntOn: () => { const m = mem(S.me); if (!m) return; const a = new Uint8Array(12); crypto.getRandomValues(a); m.ntfy = "letsgo-" + [...a].map(x => "abcdefghjkmnpqrstuvwxyz23456789"[x % 31]).join("");
+    save(); closeIfOpen(); tripSettings(); toast("Turned on. Follow the 3 steps to finish.", "bell"); setTimeout(() => { const el = document.querySelector("[data-a=ntTest]"); if (el) el.scrollIntoView({ block: "center" }); }, 350); },
+  ntOff: () => { const m = mem(S.me); if (m) delete m.ntfy; save(); closeIfOpen(); tripSettings(); toast("Notifications off for this trip", "x"); },
+  ntCopy: () => { const m = mem(S.me); if (m && m.ntfy) copyText(m.ntfy, "Topic copied"); },
+  ntTest: () => { const m = mem(S.me); if (!m || !m.ntfy) return;
+    fetch(NTFY + "/", { method: "POST", body: JSON.stringify({ topic: m.ntfy, title: "Let's Go is connected", message: `You'll get updates for ${S.trip.name} here.`, tags: ["tada"] }) })
+      .then(r => toast(r.ok ? "Test sent. Check the ntfy app." : "ntfy didn't accept it. Try again in a minute.", r.ok ? "bell" : "info")).catch(() => toast("Couldn't reach ntfy. Check your connection.", "info")); scheduleReminders(); },
+  nudgePush: d => { const n = notify([d.from], `Settle up: ${S.trip.name}`, `${nmFull(S.me)} is reminding you: you owe ${nmFull(d.to)} ${money(+d.amt)}. Open Let's Go to pay by UPI.`); closeSheet(); toast(n ? "Reminder sent" : `${nmFull(d.from)} hasn't turned on notifications`, n ? "bell" : "info"); },
+  groups: () => { closeIfOpen(); groupsSheet(); },
+  editGroup: d => { editGroup(d.id, d.k); },
+  delGroup: (d, el) => { if (!confirmTap(el, "Tap again to remove")) return; const k = d.k === "car" ? "cars" : "rooms"; S.groups[k] = S.groups[k].filter(g => g.id !== d.id); save(); groupsSheet(); toast("Removed"); },
+  grpPick: d => { const p = F.picked; const k = p.indexOf(d.id); if (k >= 0) p.splice(k, 1); else p.push(d.id); const el = document.querySelector(`[data-a=grpPick][data-id="${d.id}"]`); if (el) { el.classList.toggle("on", k < 0); el.setAttribute("aria-pressed", String(k < 0)); } },
+  expGroup: d => { const g = groupOf(d.id); if (!g) return; F.split.group = g.id; F.split.participants = S.members.map(m => m.id).filter(id => g.members.includes(id)); renderSplitBox(); },
+  essentials: () => { closeIfOpen(); essentialsSheet(); },
+  editEssentials: () => { closeIfOpen(); editEssentials(); },
+  essAddContact: () => { document.querySelectorAll("#essContacts [data-c]").forEach(el => { F.contacts[+el.dataset.c][el.dataset.f] = el.value.trim(); }); F.contacts.push({ name: "", phone: "", note: "" }); $("#essContacts").innerHTML = F.contacts.map(F.crow).join(""); const ins = document.querySelectorAll("#essContacts [data-f=name]"); if (ins.length) ins[ins.length - 1].focus(); },
+  wxRefresh: () => loadWeather(true)
+});
 function copyText(t, ok, selectSel) {
   const fallback = () => { const el = selectSel && $(selectSel); if (el) { if (el.select) el.select(); else { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } toast("Selected. Use Copy from the menu.", "info"); } else toast("Couldn't copy. Long-press to copy instead.", "info"); };
   try { navigator.clipboard.writeText(t).then(() => toast(ok), fallback); } catch { fallback(); }

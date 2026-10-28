@@ -52,6 +52,17 @@ Open the app link in Safari → **Share** → **Add to Home Screen**. It opens f
 - Some UPI apps may decline link-started payments to personal UPI IDs as a security check. If that happens, scan the QR code or copy the UPI ID instead.
 - After paying, the payer taps **I've paid**. The person paid checks their bank and taps **Got it**. Balances change only after that.
 
+## Extras in version 3
+
+- **Trip kitty:** pool cash with one person. Spends from the kitty split like any expense, and the leftover is shared back at Settle up.
+- **Money changes:** every add, edit and delete to money is recorded. Deleted expenses can be restored.
+- **Notifications:** each person can turn them on in Trip settings. They use the free ntfy app (no account), so they work even when Let's Go is closed. Includes a reminder the evening before each trip day.
+- **Weather:** the forecast for each trip day from Open-Meteo (free, no key), about two weeks ahead. If the destination is a region, add a town for weather in Trip settings.
+- **Receipt reading:** a photo of a printed bill fills in the total, date and place, on the phone itself. Always check before saving; handwritten bills rarely work.
+- **Cars & rooms:** say who's in which car or room once, then split fuel or a room bill with one tap.
+- **Start from an earlier trip:** copy the group, packing list, tasks and budget into a new trip.
+- **Trip essentials:** stay address, contacts, emergency numbers (India: 112, 108) and a nearest-hospital search.
+
 ## Privacy
 
 - Each trip is visible only to phones that opened its invite link. Anyone with the link can join, so share it only with your group.
@@ -60,7 +71,7 @@ Open the app link in Safari → **Share** → **Add to Home Screen**. It opens f
 
 ## Current limits
 
-- Receipt scanning takes a photo, but you type the details. Automatic reading isn't connected.
-- No push notifications yet. Changes show up when the app is open.
+- Receipt reading downloads its reading engine (a few MB) the first time, so it needs internet once.
+- Notifications go through the public ntfy.sh service. Each person's topic is random; anyone who knew it could read the messages, so they never include UPI IDs or notes.
 - "Remove from my phone" takes a trip off your phone only. Everyone else keeps it, and you can rejoin with the invite link. When the last person removes a trip, its data is deleted from the database.
 - If someone clears their browser data or changes phones, they sign in with their email to get every trip back. Without email sign-in, they rejoin with each trip's invite link (**My trips** → **Save my trips** sends them all in one message).
