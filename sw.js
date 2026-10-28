@@ -1,6 +1,6 @@
 // Let's Go offline support.
 // Change VERSION whenever you change index.html so phones pick up the update.
-const VERSION = "letsgo-v9";
+const VERSION = "letsgo-v10";
 const CORE = [
   "./",
   "index.html",
@@ -20,7 +20,8 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k))))
+      // Only remove this app's old caches. Other apps on andersonjones-dev.github.io share this storage.
+      .then(keys => Promise.all(keys.filter(k => k.startsWith("letsgo-") && k !== VERSION).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -34,9 +35,10 @@ self.addEventListener("fetch", event => {
   if (req.mode === "navigate" || (url.origin === location.origin && url.pathname.endsWith("config.js"))) {
     const key = req.mode === "navigate" ? "index.html" : req;
     event.respondWith(
-      fetch(req)
+      // Try the network for up to 3 seconds (weak signal can hang for a minute), then use the saved copy.
+      Promise.race([fetch(req), new Promise((_, no) => setTimeout(no, 3000))])
         .then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put(key, copy)); return res; })
-        .catch(() => caches.match(key))
+        .catch(() => caches.match(key).then(hit => hit || fetch(req)))
     );
     return;
   }
