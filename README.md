@@ -11,6 +11,7 @@ A mobile-first group-trip planner for friends: plan days and drives together, vo
 | `supabase/setup.sql` | One-time database setup that keeps each trip private to its members |
 | `manifest.webmanifest` | Lets the app be added to the Home Screen with its name and icon |
 | `sw.js` | Offline support, so the app opens without internet |
+| `update.js` | Shows "A new version of Let’s Go is ready" with an Update button after you publish a change |
 | `icons/` | App icons for the Home Screen and browser tab |
 
 ## 1. Turn on the website (GitHub Pages)
@@ -28,7 +29,7 @@ Without step 2 below, the app works fully on one phone, but friends can't join y
 3. Open **Authentication** → **Sign In / Providers** (or **Providers**) and switch on **Allow anonymous sign-ins**. This lets friends join with an invite link instead of a password.
 4. Open **Project Settings** → **API**. Copy the **Project URL** and the **anon public** key.
 5. In this repository, open `config.js`, tap the pencil to edit, paste the two values between the quotes, and **Commit changes**.
-6. Open `sw.js`, change the version number at the top (for example `letsgo-v3` to `letsgo-v4`), and commit. (Do this every time you change the app, so phones fetch the new version.)
+6. Open `sw.js`, change the version number at the top (for example `letsgo-v3` to `letsgo-v4`), and commit. (Do this every time you change the app. Phones then show an **Update** bar; nothing changes until it’s tapped.)
 
 Open the app, create a trip, then tap **Invite** to send the link on WhatsApp. Friends tap the link, tap their name (or join with a new one), and everything stays in sync. Once someone has taken a name on their phone, nobody else can pick it.
 

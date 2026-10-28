@@ -1,58 +1,109 @@
-// Let's Go offline support.
-// Change VERSION whenever you change index.html so phones pick up the update.
-const VERSION = "letsgo-v10";
+/*
+ * Let’s Go: offline support + update bar.
+ * ---------------------------------------------------------------
+ * IMPORTANT: change VERSION every time you publish a change on GitHub.
+ * Phones then download the new version in the background and show
+ * "A new version of Let’s Go is ready" with an Update button (update.js).
+ * Nothing changes until Update is tapped, so it never interrupts anyone.
+ *
+ * The app always opens from the saved copy, so it works with no internet.
+ */
+const VERSION = 'letsgo-v11';
+const PREFIX = 'letsgo-';   // only caches starting with this are ever deleted: other apps share this storage
+const LIB = 'letsgo-lib';         // fonts and libraries from other sites, kept between versions
+const KEEP = [];
 const CORE = [
-  "./",
-  "index.html",
-  "config.js",
-  "manifest.webmanifest",
-  "icons/apple-touch-icon.png",
-  "icons/icon-192.png",
-  "icons/icon-512.png",
-  "icons/favicon-32.png"
+  './',
+  'index.html',
+  'config.js',
+  'update.js',
+  'manifest.webmanifest',
+  'icons/apple-touch-icon.png',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'icons/icon-maskable-512.png',
+  'icons/favicon-32.png'
 ];
-const CDN = ["cdn.jsdelivr.net", "cdnjs.cloudflare.com", "fonts.googleapis.com", "fonts.gstatic.com"];
+const LIB_HOSTS = ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
+const LIB_PRELOAD = [
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'
+];
+const NETWORK_FIRST = ['config.js'];   // small settings files: try the latest for 3 seconds, else the saved copy
+const SKIP_PATHS = [];         // parts of the site that belong to another app
 
-self.addEventListener("install", event => {
-  event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(CORE)).then(() => self.skipWaiting()));
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(VERSION)
+      .then((c) => Promise.all(CORE.map((u) =>
+        // cache: 'reload' skips the browser's own cache, so we always save the newly published files
+        fetch(new Request(u, { cache: 'reload' })).then((r) => {
+          if (!r.ok) throw new Error('Could not save ' + u + ' (' + r.status + ')');
+          return c.put(u, r);
+        }))))
+      .then(() => caches.open(LIB))
+      .then((c) => Promise.all(LIB_PRELOAD.map((u) =>
+        c.match(u).then((hit) => hit || fetch(u, { mode: 'no-cors' }).then((r) => c.put(u, r))).catch(() => {}))))
+  );
+  // No skipWaiting() here: the new version waits until Update is tapped.
 });
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
     caches.keys()
-      // Only remove this app's old caches. Other apps on andersonjones-dev.github.io share this storage.
-      .then(keys => Promise.all(keys.filter(k => k.startsWith("letsgo-") && k !== VERSION).map(k => caches.delete(k))))
+      .then((keys) => Promise.all(keys
+        .filter((k) => k.startsWith(PREFIX) && k !== VERSION && k !== LIB && KEEP.indexOf(k) < 0)
+        .map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener("fetch", event => {
-  const req = event.request;
-  if (req.method !== "GET") return;
+function saveTo(cacheName, key, res) {
+  if (res && (res.ok || res.type === 'opaque')) {
+    const copy = res.clone();
+    caches.open(cacheName).then((c) => c.put(key, copy)).catch(() => {});
+  }
+  return res;
+}
+
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // The app page and settings: network first so updates arrive, saved copy when offline.
-  if (req.mode === "navigate" || (url.origin === location.origin && url.pathname.endsWith("config.js"))) {
-    const key = req.mode === "navigate" ? "index.html" : req;
-    event.respondWith(
-      // Try the network for up to 3 seconds (weak signal can hang for a minute), then use the saved copy.
-      Promise.race([fetch(req), new Promise((_, no) => setTimeout(no, 3000))])
-        .then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put(key, copy)); return res; })
-        .catch(() => caches.match(key).then(hit => hit || fetch(req)))
+  if (url.origin === location.origin) {
+    if (SKIP_PATHS.some((p) => url.pathname.indexOf(p) >= 0)) return;
+
+    if (NETWORK_FIRST.some((f) => url.pathname.endsWith('/' + f))) {
+      e.respondWith(
+        Promise.race([fetch(req), new Promise((_, no) => setTimeout(no, 3000))])
+          .then((res) => saveTo(VERSION, req, res))
+          .catch(() => caches.open(VERSION).then((c) => c.match(req, { ignoreSearch: true })).then((hit) => hit || fetch(req)))
+      );
+      return;
+    }
+
+    // The app page and its files: the saved copy of THIS version first (never mix versions).
+    const key = req.mode === 'navigate' ? 'index.html' : req;
+    e.respondWith(
+      caches.open(VERSION)
+        .then((c) => c.match(key, { ignoreSearch: true }))
+        .then((hit) => hit || fetch(req).then((res) => saveTo(VERSION, key, res)))
+        .catch(() => req.mode === 'navigate'
+          ? caches.open(VERSION).then((c) => c.match('index.html'))
+          : Response.error())
     );
     return;
   }
 
-  // Never cache sync traffic.
-  if (url.hostname.endsWith("supabase.co")) return;
-
-  // App files, libraries and fonts: saved copy first, fetch and save if missing.
-  if (url.origin === location.origin || CDN.includes(url.hostname)) {
-    event.respondWith(
-      caches.match(req).then(hit => hit || fetch(req).then(res => {
-        if (res.ok || res.type === "opaque") { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
-        return res;
-      }))
+  if (LIB_HOSTS.indexOf(url.hostname) >= 0) {
+    e.respondWith(
+      caches.open(LIB).then((c) => c.match(req).then((hit) => hit || fetch(req).then((res) => saveTo(LIB, req, res))))
     );
   }
+  // Anything else (sync, notifications, databases) always goes straight to the network.
 });
