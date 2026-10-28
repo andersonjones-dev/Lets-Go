@@ -754,13 +754,10 @@ select.inp{-webkit-appearance:none;appearance:none;background:linear-gradient(45
 body{margin:0;min-height:100vh;min-height:100dvh}
 img{max-width:100%}
 [hidden]{display:none!important}
-/* iPhone Home Screen height fix: --gap is the missing strip at the bottom of the screen */
+/* iPhone Home Screen height fix: if iOS reports the window short, stretch the page to the real
+   screen height. Bottom bars stay at bottom:0 plus the safe area, which iOS always places at
+   the true bottom; moving them lower pushes the tab bar off the screen. */
 html.ios-gap body{min-height:calc(100vh + var(--gap))}
-html.ios-gap .nav{bottom:calc(0px - var(--gap))}
-html.ios-gap .composer{bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) - var(--gap))}
-html.ios-gap .fab{bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px) - var(--gap))}
-html.ios-gap .toast{bottom:calc(var(--nav-h) + 24px + env(safe-area-inset-bottom,0px) - var(--gap))}
-html.ios-gap .sheet,html.ios-gap .scrim{bottom:calc(0px - var(--gap))}
 </style>
 </head>
 <body>
@@ -1335,8 +1332,7 @@ async function handleJoinLink() {
   } catch { toast("That invite link didn't work. Ask for a fresh one.", "info"); }
 }
 /* iPhone Home Screen height fix: in standalone mode iOS can report the window one
-   status bar short, which leaves the tab bar floating too high. Measure the gap and
-   push every bottom-anchored element down to the real bottom of the screen. */
+   status bar short. Measure the gap and stretch the page to the real screen height. */
 function fixHomeScreenHeight() {
   const r = document.documentElement;
   let gap = 0;
@@ -1347,9 +1343,8 @@ function fixHomeScreenHeight() {
     const full = portrait ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);
     const diff = full - h;
     const typing = HS.focused();
-    /* Launch bug: the page is told it's one status bar short. Push bottom bars to the real bottom.
-       Skip while typing (the keyboard takes real space) and after the keyboard bug below,
-       where the page really is shorter and pushing would hide the tab bar. */
+    /* Launch bug: the page is told it's one status bar short. Stretch the page background to fill it.
+       Skip while typing (the keyboard takes real space) and after the keyboard bug below. */
     if (!typing && !HS.shrunk && diff > 0 && diff <= 80) gap = diff;
   }
   r.style.setProperty("--gap", gap + "px");
