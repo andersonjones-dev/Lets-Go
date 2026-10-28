@@ -1,5 +1,6 @@
 -- Let's Go: database setup.
--- Run this once in Supabase → SQL Editor → New query → paste everything → Run.
+-- Run this in Supabase → SQL Editor → New query → paste everything → Run.
+-- It's safe to run again after an update: it keeps your existing trips.
 -- It creates three tables and the rules that keep each trip private to its members.
 
 create table if not exists public.trips (
@@ -45,7 +46,6 @@ drop policy if exists "members change docs" on public.docs;
 drop policy if exists "members remove docs" on public.docs;
 
 create policy "members read trips" on public.trips for select to authenticated using (public.is_member(id));
-create policy "members delete trips" on public.trips for delete to authenticated using (public.is_member(id));
 create policy "see own membership" on public.members for select to authenticated using (uid = auth.uid());
 create policy "members read docs" on public.docs for select to authenticated using (public.is_member(trip_id));
 create policy "members add docs" on public.docs for insert to authenticated with check (public.is_member(trip_id));
@@ -71,8 +71,24 @@ begin
 end;
 $$;
 
+-- Remove a trip from this phone only. Everyone else keeps it.
+-- When the last member leaves, the trip and everything in it is deleted.
+create or replace function public.leave_trip(p_trip text)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then return false; end if;
+  delete from public.members where trip_id = p_trip and uid = auth.uid();
+  if not exists (select 1 from public.members where trip_id = p_trip) then
+    delete from public.trips where id = p_trip;
+  end if;
+  return true;
+end;
+$$;
+
 revoke all on function public.enter_trip(text, text) from public, anon;
 grant execute on function public.enter_trip(text, text) to authenticated;
+revoke all on function public.leave_trip(text) from public, anon;
+grant execute on function public.leave_trip(text) to authenticated;
 revoke all on function public.is_member(text) from public, anon;
 grant execute on function public.is_member(text) to authenticated;
 

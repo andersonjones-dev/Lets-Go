@@ -1,6 +1,6 @@
 // Let's Go offline support.
 // Change VERSION whenever you change index.html so phones pick up the update.
-const VERSION = "letsgo-v2";
+const VERSION = "letsgo-v3";
 const CORE = [
   "./",
   "index.html",

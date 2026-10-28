@@ -28,7 +28,7 @@ Without step 2 below, the app works fully on one phone, but friends can't join y
 3. Open **Authentication** → **Sign In / Providers** (or **Providers**) and switch on **Allow anonymous sign-ins**. This lets friends join with an invite link instead of a password.
 4. Open **Project Settings** → **API**. Copy the **Project URL** and the **anon public** key.
 5. In this repository, open `config.js`, tap the pencil to edit, paste the two values between the quotes, and **Commit changes**.
-6. Open `sw.js`, change `letsgo-v2` to `letsgo-v3`, and commit. (Do this every time you change the app, so phones fetch the new version.)
+6. Open `sw.js`, change the version number at the top (for example `letsgo-v3` to `letsgo-v4`), and commit. (Do this every time you change the app, so phones fetch the new version.)
 
 Open the app, create a trip, then tap **Invite** to send the link on WhatsApp. Friends tap the link, pick their name, and everything stays in sync.
 
@@ -55,4 +55,5 @@ Open the app link in Safari → **Share** → **Add to Home Screen**. It opens f
 
 - Receipt scanning takes a photo, but you type the details. Automatic reading isn't connected.
 - No push notifications yet. Changes show up when the app is open.
+- "Remove from my phone" takes a trip off your phone only. Everyone else keeps it, and you can rejoin with the invite link. When the last person removes a trip, its data is deleted from the database.
 - If someone clears their browser data, they rejoin with the trip's invite link.

@@ -1236,7 +1236,6 @@ async function makeSupabaseDB() {
       },
       async delete() {
         const tid = tripOf(path);
-        if (tid && path === "trips/" + tid) { const { error } = await sb.from("trips").delete().eq("id", tid); if (error) fail(error); return; }
         const { error } = await sb.from("docs").delete().eq("path", path);
         if (error) fail(error);
       },
@@ -1278,7 +1277,12 @@ async function makeSupabaseDB() {
       }
     };
   }
-  return { doc: docRef, collection: collectionRef, join: enterWith };
+  async function leave(tid) {
+    const { error } = await sb.rpc("leave_trip", { p_trip: tid });
+    if (error) fail(error);
+    entered.delete(tid);
+  }
+  return { doc: docRef, collection: collectionRef, join: enterWith, leave };
 }
 function joinSecret() { return Array.from(crypto.getRandomValues(new Uint8Array(14)), b => "abcdefghjkmnpqrstuvwxyz23456789"[b % 31]).join(""); }
 const inviteLink = T => (T && T.trip && T.trip.join && location.protocol.startsWith("http")) ? `${location.origin}${location.pathname}?join=${T.id}.${T.trip.join}` : "";
@@ -1439,6 +1443,7 @@ async function switchTrip(tid) {
   if (DB) subscribeTrip(tid);
   if (!S.meChosen) setTimeout(askWho, 400);
 }
+const T_remote = () => !!(S && S.remote);
 function tripGone(tid) {
   const T = STORE.trips[tid]; if (!T) return;
   delete STORE.trips[tid];
@@ -1447,16 +1452,13 @@ function tripGone(tid) {
   const next = Object.values(STORE.trips)[0];
   if (next) switchTrip(next.id); else { save(); render(); }
 }
+/* Removing a trip only takes it off this phone. Everyone else keeps it.
+   The shared copy is cleaned up when the last person removes it. */
 async function deleteTrip(tid) {
   const T = STORE.trips[tid]; if (!T) return;
+  if (S && S.id === tid) { clearTimeout(pushT); subs.forEach(u => { try { u(); } catch {} }); subs = []; subTrip = ""; syncReady = false; S = null; }
   delete STORE.trips[tid];
-  if (S && S.id === tid) { subs.forEach(u => { try { u(); } catch {} }); subs = []; subTrip = ""; syncReady = false; S = null; }
-  if (DB && T.remote) {
-    const ops = [];
-    SYNCED.forEach(k => (T[k] || []).forEach(it => ops.push(DB.collection(tp(tid, k)).doc(it.id).delete())));
-    ops.push(DB.doc(tp(tid)).delete());
-    try { await Promise.all(ops); } catch {}
-  }
+  if (DB && DB.leave && T.remote) { try { await DB.leave(tid); } catch {} }
   const next = Object.values(STORE.trips)[0];
   if (next) switchTrip(next.id); else { save(); render(); }
 }
@@ -2445,8 +2447,8 @@ function tripSettings() {
   <div class="section"><div class="sec-h"><h2>People (${S.members.length})</h2><button class="link-btn" data-a="editMember" data-id="">+ Add person</button></div>
     <div class="card list">${S.members.map(m => `<button class="bal" style="width:100%;text-align:left" data-a="editMember" data-id="${m.id}">${av(m.id, 36)}<span class="t"><b>${esc(m.name)}${m.id === S.me ? " (you)" : ""}</b><div class="muted" style="font-size:12.5px;font-weight:600">${m.upi ? "UPI: " + esc(m.upi) : "No UPI ID added"}</div></span>${ic("chev", 18)}</button>`).join("")}</div></div>
   <div class="section"><button class="btn block ghost" data-a="syncSheet">${ic("wifi", 18)} Sync & joining</button>
-    <div class="two"><button class="btn ghost sm" data-a="tripsSheet">${ic("suitcase", 16)} My trips</button><button class="btn danger sm" data-a="delTrip">${ic("trash", 16)} Delete trip</button></div>
-    <p class="calc" style="margin:0">${DB && syncReady ? "Deleting removes this trip for everyone on it." : "Deleting removes this trip from this phone."}</p></div>`, () => {
+    <div class="two"><button class="btn ghost sm" data-a="tripsSheet">${ic("suitcase", 16)} My trips</button><button class="btn danger sm" data-a="delTrip">${ic("trash", 16)} Remove from my phone</button></div>
+    <p class="calc" style="margin:0">${DB && T_remote() ? "This removes the trip from your phone only. Everyone else keeps it, and you can rejoin with the invite link." : "This removes the trip from this phone."}</p></div>`, () => {
     $("#tripForm").addEventListener("submit", ev => {
       ev.preventDefault();
       const name = $("#f-name").value.trim(), s = $("#f-start").value, e = $("#f-end").value;
@@ -2608,7 +2610,7 @@ const A = {
   tripsSheet: () => { closeIfOpen(); tripsSheet(); }, newTripSheet: () => { closeIfOpen(); newTripSheet(); },
   openTrip: d => switchTrip(d.id),
   addDemo: () => { const T = seed(); STORE.trips[T.id] = T; switchTrip(T.id); toast("Demo trip added. Have a look around."); },
-  delTrip: (d, el) => { if (!confirmTap(el, "Tap again to delete")) return; const name = S.trip.name; closeSheet(); deleteTrip(S.id); toast(`Deleted ${name}`); },
+  delTrip: (d, el) => { if (!confirmTap(el, "Tap again to remove")) return; const name = S.trip.name; closeSheet(); deleteTrip(S.id); toast(`Removed ${name} from your phone`); },
   payNow: d => { closeIfOpen(); paySheet(d.to, +d.amt); },
   iPaid: d => { S.settlements.push({ id: uid("s"), from: S.me, to: d.to, amount: +d.amt, date: todayISO(), method: "UPI", note: "", status: "pending", by: S.me }); postMsg({ text: `I've paid ${nmFull(d.to)} ${money(+d.amt)} by UPI. Please confirm in Money when it arrives.` }); closeSheet(); render(); toast(`Marked as paid. ${nmFull(d.to)} will confirm.`); },
   confirmSheet: d => { closeIfOpen(); confirmSheet(d.id); },
