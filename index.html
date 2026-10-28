@@ -1189,11 +1189,15 @@ async function makeSupabaseDB() {
   if (!cfg.supabaseUrl || !cfg.supabaseAnonKey || /YOUR-|PASTE/i.test(cfg.supabaseUrl + cfg.supabaseAnonKey)) return null;
   if (!window.supabase || !window.supabase.createClient) return null;
   const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "letsgo.auth" } });
+  let me = { id: "", email: "", anon: true };
+  const setMe = u => { me = { id: (u && u.id) || "", email: (u && u.email) || "", anon: !u || !!u.is_anonymous }; };
   const { data: sess } = await sb.auth.getSession();
   if (!sess || !sess.session) {
     const r = await sb.auth.signInAnonymously();
     if (r.error) throw r.error;
-  }
+    setMe(r.data.user);
+  } else setMe(sess.session.user);
+  sb.auth.onAuthStateChange((ev, session) => { if (session && session.user) setMe(session.user); });
   const fail = e => { throw { code: "unavailable", message: (e && e.message) || String(e) }; };
   const tripOf = path => path.startsWith("trips/") ? path.split("/")[1] : null;
   const parentOf = path => path.split("/").slice(0, -1).join("/");
@@ -1282,7 +1286,35 @@ async function makeSupabaseDB() {
     if (error) fail(error);
     entered.delete(tid);
   }
-  return { doc: docRef, collection: collectionRef, join: enterWith, leave };
+  /* Email sign-in with a one-time code. On this phone it first tries to attach the
+     email to the current account; if that email already has an account (say, from
+     an old phone), it signs in to that account instead. */
+  const auth = {
+    async sendCode(email) {
+      if (me.anon && !me.email) {
+        const r = await sb.auth.updateUser({ email });
+        if (!r.error) return "link";
+        if (!/already|registered|exists/i.test(r.error.message || "")) throw r.error;
+      }
+      const r2 = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+      if (r2.error) throw r2.error;
+      return "signin";
+    },
+    async verify(email, token, mode) {
+      const r = await sb.auth.verifyOtp({ email, token, type: mode === "link" ? "email_change" : "email" });
+      if (r.error) throw r.error;
+      const u = r.data.user || (r.data.session && r.data.session.user);
+      const changed = u && u.id !== me.id;
+      setMe(u);
+      if (changed) {
+        entered.clear();
+        for (const T of Object.values(STORE.trips)) { if (T.trip && T.trip.join) { try { await enterWith(T.id, T.trip.join); } catch {} } }
+      }
+      refreshAll();
+      return { changed };
+    }
+  };
+  return { doc: docRef, collection: collectionRef, join: enterWith, leave, auth, uid: () => me.id, email: () => me.email };
 }
 function joinSecret() { return Array.from(crypto.getRandomValues(new Uint8Array(14)), b => "abcdefghjkmnpqrstuvwxyz23456789"[b % 31]).join(""); }
 const inviteLink = T => (T && T.trip && T.trip.join && location.protocol.startsWith("http")) ? `${location.origin}${location.pathname}?join=${T.id}.${T.trip.join}` : "";
@@ -1390,7 +1422,7 @@ async function initSync() {
     const ids = new Set(); let changed = false;
     q.docs.forEach(d => {
       const id = d.id, m = clone(d.data()); ids.add(id);
-      if (!STORE.trips[id]) { STORE.trips[id] = fixTrip({ v: 2, id, me: "", meChosen: false, remote: true, trip: m.trip, members: m.members || [], budget: m.budget || {}, rates: m.rates || {}, demo: m.demo }); changed = true; }
+      if (!STORE.trips[id]) { STORE.trips[id] = fixTrip({ v: 2, id, me: "", meChosen: false, remote: true, trip: m.trip, members: m.members || [], budget: m.budget || {}, rates: m.rates || {}, demo: m.demo }); recogniseMe(STORE.trips[id]); changed = true; }
       else if (id !== subTrip) { Object.assign(STORE.trips[id], { trip: m.trip, members: m.members || [], budget: m.budget || {}, rates: m.rates || {}, demo: m.demo, remote: true }); changed = true; }
     });
     Object.keys(STORE.trips).forEach(id => { if (STORE.trips[id].remote && !ids.has(id) && id !== subTrip) { delete STORE.trips[id]; changed = true; } });
@@ -1405,11 +1437,11 @@ async function subscribeTrip(tid) {
   if (!DB) return;
   setSync("connecting");
   let metaSeen = false; const seen = new Set();
-  const ready = () => { if (subTrip === tid && !syncReady && metaSeen && seen.size === SYNCED.length) { syncReady = true; setSync("live"); schedulePush(); } };
+  const ready = () => { if (subTrip === tid && !syncReady && metaSeen && seen.size === SYNCED.length) { syncReady = true; setSync("live"); claimMe(); schedulePush(); } };
   try {
     const meta = await DB.doc(tp(tid)).get();
     if (subTrip !== tid) return;
-    if (!meta.exists) { syncReady = true; await pushChanges(); }
+    if (!meta.exists) { syncReady = true; claimMe(); await pushChanges(); }
   } catch { setSync("error"); return; }
   subs.push(DB.doc(tp(tid)).onSnapshot(snap => {
     if (subTrip !== tid) return;
@@ -1419,7 +1451,8 @@ async function subscribeTrip(tid) {
     if (js === metaSynced) return; metaSynced = js;
     const T = STORE.trips[tid]; if (!T) return;
     Object.assign(T, { trip: d.trip, members: d.members || [], budget: d.budget || {}, rates: d.rates || {}, demo: d.demo, remote: true });
-    if (!T.members.some(m => m.id === T.me)) T.me = T.members[0] ? T.members[0].id : "";
+    if (!T.members.some(m => m.id === T.me)) { T.me = ""; T.meChosen = false; }
+    recogniseMe(T);
     remoteRender();
     if (!T.meChosen) setTimeout(askWho, 700);
   }, () => setSync("error")));
@@ -1444,6 +1477,20 @@ async function switchTrip(tid) {
   if (!S.meChosen) setTimeout(askWho, 400);
 }
 const T_remote = () => !!(S && S.remote);
+/* Names in a trip are claimed by a phone's account, so nobody can pick a name someone else is using */
+const myUid = () => (DB && DB.uid ? DB.uid() : "");
+function recogniseMe(T) {
+  const u = myUid(); if (!u || T.meChosen) return;
+  const m = (T.members || []).find(x => x.uid === u);
+  if (m) { T.me = m.id; T.meChosen = true; T.myUid = u; }
+}
+function claimMe() {
+  const u = myUid(); if (!u || !S || !S.meChosen) return;
+  const m = mem(S.me); if (!m) return;
+  if (!m.uid || m.uid === S.myUid) { if (m.uid !== u) { m.uid = u; save(); } S.myUid = u; }
+  else if (m.uid !== u) { S.me = ""; S.meChosen = false; askWho(); }
+}
+const takenByOther = m => !!(m.uid && m.uid !== myUid() && m.uid !== (S && S.myUid));
 function tripGone(tid) {
   const T = STORE.trips[tid]; if (!T) return;
   delete STORE.trips[tid];
@@ -1532,15 +1579,71 @@ function vWelcome() {
     <p class="calc" style="margin:0">Add the trip, invite friends from WhatsApp, then vote on plans, share routes and split every expense fairly.</p>
     <button class="btn block" data-a="newTripSheet">${ic("plus", 18, 2.4)} Create your trip</button>
     <button class="btn block ghost" data-a="addDemo">Try the demo trip</button>
+    ${DB && DB.auth && !DB.email() ? `<button class="btn block ghost" data-a="emailSheet">${ic("user", 18)} Used Let's Go before? Sign in</button>` : ""}
   </div></section>
   ${shared.length ? `<section class="section"><div class="sec-h"><h2>Trips shared with you</h2></div><div class="card list">${shared.map(T => `<button class="bal" style="width:100%;text-align:left" data-a="openTrip" data-id="${T.id}">${ill(T.demo ? "adventure" : "route", 44)}<span class="t"><b>${esc(T.trip.name)}</b><div class="muted" style="font-size:12.5px;font-weight:600">${tripRangeOf(T)} · ${T.members.length} people</div></span>${ic("chev", 18)}</button>`).join("")}</div></section>` : ""}`;
+}
+function tripLinksText() {
+  const all = Object.values(STORE.trips).filter(T => inviteLink(T));
+  return `My Let's Go trips\n\n` + all.map(T => `${T.trip.name} (${tripRangeOf(T)})\n${inviteLink(T)}`).join("\n\n") + `\n\nOpen a link on any phone to get the trip back.`;
+}
+function accountCard() {
+  if (!DB || !DB.auth) return "";
+  const email = DB.email();
+  return email
+    ? `<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px"><div class="row">${ic("check", 18, 2.4)}<b style="flex:1;min-width:0;overflow-wrap:anywhere">Signed in as ${esc(email)}</b></div><p class="calc" style="margin:0">On a new phone, sign in with this email and all your trips come back.</p></div>`
+    : `<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px"><b>Keep your trips safe</b><p class="calc" style="margin:0">Add your email so you can get every trip back on a new phone, or after deleting the app.</p><button class="btn" data-a="emailSheet">${ic("user", 18)} Sign in with email</button></div>`;
+}
+function emailSheet() {
+  F = { step: 1, email: "", mode: "" };
+  const draw = () => openSheet(F.step === 1 ? "Sign in with email" : "Enter your code", F.step === 1 ? `<form class="stack" id="emailForm">
+      <p class="calc" style="margin:0">We'll email you a one-time code. No password needed.</p>
+      <div class="field"><label for="em-email">Email</label><input class="inp" id="em-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" value="${esc(F.email)}" placeholder="you@example.com"></div>
+      <div class="err" id="f-err" hidden></div>
+      <button class="btn block" type="submit">Send code</button></form>`
+    : `<form class="stack" id="codeForm">
+      <p class="calc" style="margin:0">We sent a code to <b>${esc(F.email)}</b>. It can take a minute, so check spam too.</p>
+      <div class="field"><label for="em-code">Code</label><input class="inp num" id="em-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456"></div>
+      <div class="err" id="f-err" hidden></div>
+      <button class="btn block" type="submit">Verify</button>
+      <button class="btn block ghost" type="button" data-a="emailBack">Use a different email</button></form>`, () => {
+    const f1 = $("#emailForm"), f2 = $("#codeForm");
+    if (f1) f1.addEventListener("submit", async ev => {
+      ev.preventDefault(); const email = $("#em-email").value.trim().toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return formErr("That email doesn't look right.", "#em-email");
+      const b = f1.querySelector("button[type=submit]"); b.disabled = true; b.textContent = "Sending…";
+      try { F.mode = await DB.auth.sendCode(email); F.email = email; F.step = 2; draw(); }
+      catch (e) { b.disabled = false; b.textContent = "Send code"; formErr(authErr(e)); }
+    });
+    if (f2) f2.addEventListener("submit", async ev => {
+      ev.preventDefault(); const code = $("#em-code").value.replace(/\D/g, "");
+      if (code.length < 6) return formErr("Enter the code from the email.", "#em-code");
+      const b = f2.querySelector("button[type=submit]"); b.disabled = true; b.textContent = "Checking…";
+      try {
+        const r = await DB.auth.verify(F.email, code, F.mode);
+        Object.values(STORE.trips).forEach(T => { const m = (T.members || []).find(x => x.id === T.me); if (m && T.meChosen && (!m.uid || m.uid === T.myUid)) { m.uid = myUid(); T.myUid = myUid(); } });
+        closeSheet(); if (S) { claimMe(); schedulePush(); } render();
+        toast(r.changed ? "Signed in. Your trips are coming back." : "Email added. Your trips are safe.");
+      } catch (e) { b.disabled = false; b.textContent = "Verify"; formErr(authErr(e)); }
+    });
+  });
+  F.redraw = draw; draw();
+}
+function authErr(e) {
+  const m = String((e && e.message) || e || "");
+  if (/not authorized/i.test(m)) return "This email can't receive codes yet. The app owner needs to finish the email setup in Supabase.";
+  if (/rate|too many|security purposes/i.test(m)) return "Too many codes were sent. Wait a few minutes and try again.";
+  if (/expired|invalid|token/i.test(m)) return "That code didn't work or has expired. Check it, or send a new one.";
+  return "Couldn't do that just now. Check your connection and try again.";
 }
 function tripsSheet() {
   const all = Object.values(STORE.trips).sort((a, b) => (a.trip.start || "").localeCompare(b.trip.start || ""));
   openSheet("My trips", `<div class="stack">
     <div class="card list">${all.map(T => `<button class="bal" style="width:100%;text-align:left" data-a="openTrip" data-id="${T.id}">${ill(T.demo ? "adventure" : "route", 44)}<span class="t"><b>${esc(T.trip.name)}</b><div class="muted" style="font-size:12.5px;font-weight:600">${tripRangeOf(T)} · ${T.members.length} people${T.demo ? " · demo" : ""}</div></span>${S && T.id === S.id ? `<span class="pillt p-conf">Open</span>` : ic("chev", 18)}</button>`).join("")}</div>
     <button class="btn block" data-a="newTripSheet">${ic("plus", 18, 2.4)} New trip</button>
-    ${all.some(T => T.demo) ? "" : `<button class="btn block ghost" data-a="addDemo">Add the demo trip</button>`}</div>`);
+    ${all.some(T => T.demo) ? "" : `<button class="btn block ghost" data-a="addDemo">Add the demo trip</button>`}
+    ${DB && all.some(T => inviteLink(T)) ? `<button class="btn block ghost" data-a="saveTrips">${ic("share", 18)} Save my trips</button><p class="calc" style="margin:0">Sends you one message with every trip's link, so you can get them back on any phone.</p>` : ""}
+    ${accountCard()}</div>`);
 }
 function newTripSheet() {
   const d = new Date(); d.setDate(d.getDate() + 14); const e = new Date(d); e.setDate(d.getDate() + 2);
@@ -2410,17 +2513,22 @@ function syncSheet() {
       <p class="calc" style="margin:0">Friends tap your invite link and pick their name. No passwords.</p>
       ${inviteLink(S) && DB ? `<div class="sharebox" id="shareText" style="max-height:none;word-break:break-all">${esc(inviteLink(S))}</div><button class="btn ghost" data-a="copyInvite">${ic("copy", 18)} Copy invite link</button>` : ""}
       <button class="btn" data-a="invite">${ic("share", 18)} Send invite</button></div>
-    <div class="field"><span class="flabel">Who's using this phone?</span>${pickRowMembers("whoami", S.me)}</div>
+    <div class="card" style="padding:12px 14px"><div class="row">${S.me ? av(S.me, 34) : ""}<span style="flex:1;min-width:0"><b>${S.me ? esc(nmFull(S.me)) : "Not chosen yet"}</b><div class="muted" style="font-size:12.5px;font-weight:600">You on this phone</div></span><button class="link-btn" data-a="changeMe">Change</button></div></div>
     <p class="calc" style="margin:0">Only people who open this trip's invite link can see it. Anyone with the link can join, so share it with your group only.</p></div>`);
 }
-function askWho() {
-  if (S.meChosen || !$("#sheet").hidden) return;
-  openSheet("Who's using this phone?", `<div class="stack">
-    <p class="calc" style="margin:0">Pick your name so votes, tasks and payments show as yours. You can change it later from the sync button.</p>
-    <div class="card list">${S.members.map(m => `<button class="bal" style="width:100%;text-align:left" data-a="iAm" data-id="${m.id}">${av(m.id, 36)}<span class="t"><b>${esc(m.name)}</b></span>${ic("chev", 18)}</button>`).join("")}</div>
-    <form class="addrow" id="newMe" autocomplete="off"><input class="inp" id="newMeName" placeholder="Not listed? Type your name" maxlength="24" aria-label="Your name"><button class="btn" type="submit" style="height:48px">Join</button></form></div>`, () => {
+function askWho(force) {
+  if (!S || (S.meChosen && !force) || (!force && !$("#sheet").hidden)) return;
+  const free = S.members.filter(m => !takenByOther(m));
+  const taken = S.members.filter(takenByOther);
+  openSheet("Which one is you?", `<div class="stack">
+    <p class="calc" style="margin:0">If a friend already added you to this trip, tap your name so expenses and tasks under it become yours. Otherwise, join with your own name.</p>
+    ${free.length ? `<div class="card list">${free.map(m => `<button class="bal" style="width:100%;text-align:left" data-a="iAm" data-id="${m.id}">${av(m.id, 36)}<span class="t"><b>${esc(m.name)}</b>${m.id === S.me && S.meChosen ? `<div class="muted" style="font-size:12.5px;font-weight:600">You, on this phone</div>` : ""}</span>${ic("chev", 18)}</button>`).join("")}</div>` : ""}
+    <form class="addrow" id="newMe" autocomplete="off"><input class="inp" id="newMeName" placeholder="I'm not listed: my name" maxlength="24" aria-label="Your name"><button class="btn" type="submit" style="height:48px">Join</button></form>
+    ${taken.length ? `<div class="eyebrow">Already joined on their own phones</div><div class="card list">${taken.map(m => `<div class="bal" style="opacity:.7">${av(m.id, 32)}<span class="t"><b>${esc(m.name)}</b></span><span class="pillt p-conf">Joined</span></div>`).join("")}</div>` : ""}
+  </div>`, () => {
     $("#newMe").addEventListener("submit", ev => { ev.preventDefault(); const n = $("#newMeName").value.trim(); if (!n) return;
-      const id = uid("m"); S.members.push({ id, name: n, upi: "", color: COLORS[S.members.length % COLORS.length] }); S.me = id; S.meChosen = true; closeSheet(); render(); toast(`Welcome, ${n}!`); });
+      if (S.members.some(m => m.name.toLowerCase() === n.toLowerCase() && takenByOther(m))) { toast(`${n} has already joined. Add a surname or initial.`, "info"); return; }
+      const id = uid("m"); S.members.push({ id, name: n, upi: "", color: COLORS[S.members.length % COLORS.length], uid: myUid() || undefined }); S.me = id; S.meChosen = true; S.myUid = myUid(); closeSheet(); render(); toast(`Welcome, ${n}!`); });
   });
 }
 function applyLook(msg) {
@@ -2430,7 +2538,9 @@ function applyLook(msg) {
 }
 function tripSettings() {
   openSheet("Trip settings", `
-  <div class="section" style="margin-top:0"><div class="sec-h"><h2>Look on this phone</h2></div>
+  ${DB && DB.auth ? `<div class="section" style="margin-top:0"><div class="sec-h"><h2>Your account</h2></div>${accountCard()}
+    <button class="btn block ghost" data-a="saveTrips">${ic("share", 18)} Save my trips</button></div>` : ""}
+  <div class="section" style="${DB && DB.auth ? "" : "margin-top:0"}"><div class="sec-h"><h2>Look on this phone</h2></div>
     <div class="flabel">Design</div>
     <div class="themes">${DESIGNS.map(d => `<button class="thm ${UI.design === d.k ? "on" : ""}" data-a="setDesign" data-v="${d.k}" aria-pressed="${UI.design === d.k}" style="flex-direction:column;align-items:flex-start;gap:2px"><span>${d.name}</span><small class="muted" style="font-weight:500;font-size:12.5px">${d.desc}</small></button>`).join("")}</div>
     <div class="flabel">Colours</div>
@@ -2564,9 +2674,15 @@ const A = {
     if (d.v === "custom" && !Object.keys(F.split.custom).length) F.split.custom = shares(Object.assign({}, F, { amount: draftAmount(), split: Object.assign({}, F.split, { type: "participation" }) }));
     F.split.type = d.v; el.parentElement.querySelectorAll(".opt").forEach(b => b.classList.toggle("on", b === el)); renderSplitBox(); },
   expPart: d => { const p = F.split.participants; const k = p.indexOf(d.id); if (k >= 0) p.splice(k, 1); else p.push(d.id); F.split.participants = S.members.map(m => m.id).filter(id => p.includes(id)); renderSplitBox(); },
-  pick: (d, el) => { if (d.g === "whoami") { S.me = d.v; S.meChosen = true; render(); toast(`This phone is now ${nmFull(d.v)}`); }
+  pick: (d, el) => { if (d.g === "whoami") { A.iAm({ id: d.v }); }
     F[d.g] = d.v; const box = el.closest("[data-group]"); box.querySelectorAll("[data-a=pick]").forEach(b => b.classList.toggle("on", b === el)); if (d.g === "status") $("#schedBox").hidden = d.v !== "confirmed"; },
-  iAm: d => { S.me = d.id; S.meChosen = true; closeSheet(); render(); toast(`Hi ${nmFull(d.id)}! This phone is set to you.`); },
+  iAm: d => { const m = mem(d.id); if (!m) return; if (takenByOther(m)) { toast(`${m.name} has already joined on another phone.`, "info"); return; }
+    const old = mem(S.me); if (old && old.id !== m.id && old.uid && old.uid === myUid()) delete old.uid;
+    S.me = m.id; S.meChosen = true; if (myUid()) { m.uid = myUid(); S.myUid = myUid(); } closeSheet(); render(); toast(`Hi ${m.name}! This phone is set to you.`); },
+  changeMe: () => { closeIfOpen(); askWho(true); },
+  emailSheet: () => { closeIfOpen(); emailSheet(); },
+  emailBack: () => { F.step = 1; F.redraw(); },
+  saveTrips: () => { closeIfOpen(); shareSheet("Save my trips", tripLinksText()); },
   recordPay: d => recordPay(d.from, d.to, +d.amt), nudge: d => nudgeSheet(d.from, d.to, +d.amt),
   nudgeChat: () => { postMsg({ text: F.shareText }); closeSheet(); go("chat"); toast("Nudge posted in chat"); },
   delSettle: (d, el) => { if (!confirmTap(el, "Sure?")) return; S.settlements = S.settlements.filter(x => x.id !== d.id); render(); toast("Payment record removed"); },

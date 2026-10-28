@@ -1,0 +1,39 @@
+# Keeps the free Supabase project awake, so trips stay available even if
+# nobody opens the app for months. Runs on GitHub's servers; nothing to set up.
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: "17 3 */3 * *"   # every 3 days
+  workflow_dispatch:          # lets you run it by hand from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check in with Supabase
+        run: |
+          URL=$(grep -o 'supabaseUrl: *"[^"]*"' config.js | sed 's/.*"\(.*\)"/\1/')
+          KEY=$(grep -o 'supabaseAnonKey: *"[^"]*"' config.js | sed 's/.*"\(.*\)"/\1/')
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "config.js has no Supabase settings yet"; exit 0; fi
+          curl -fsS -X POST "$URL/rest/v1/rpc/ping" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}'
+          echo
+
+      # GitHub turns off scheduled jobs in repos with no activity for 60 days.
+      # A small monthly note keeps this job running.
+      - name: Monthly heartbeat
+        run: |
+          MONTH=$(date -u +%Y-%m)
+          if [ "$(cat .github/heartbeat 2>/dev/null)" != "$MONTH" ]; then
+            echo "$MONTH" > .github/heartbeat
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/heartbeat
+            git commit -m "Keep-alive heartbeat $MONTH"
+            git push
+          fi

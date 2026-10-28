@@ -99,6 +99,12 @@ grant execute on function public.leave_trip(text) to authenticated;
 revoke all on function public.is_member(text) from public, anon;
 grant execute on function public.is_member(text) to authenticated;
 
+-- A tiny check-in used by the keep-alive job (.github/workflows/keep-alive.yml),
+-- so the free project never pauses from inactivity. It reads no trip data.
+create or replace function public.ping()
+returns text language sql stable as $$ select 'ok'::text $$;
+grant execute on function public.ping() to anon, authenticated;
+
 -- Live updates for the docs table
 do $$ begin
   alter publication supabase_realtime add table public.docs;

@@ -30,9 +30,16 @@ Without step 2 below, the app works fully on one phone, but friends can't join y
 5. In this repository, open `config.js`, tap the pencil to edit, paste the two values between the quotes, and **Commit changes**.
 6. Open `sw.js`, change the version number at the top (for example `letsgo-v3` to `letsgo-v4`), and commit. (Do this every time you change the app, so phones fetch the new version.)
 
-Open the app, create a trip, then tap **Invite** to send the link on WhatsApp. Friends tap the link, pick their name, and everything stays in sync.
+Open the app, create a trip, then tap **Invite** to send the link on WhatsApp. Friends tap the link, tap their name (or join with a new one), and everything stays in sync. Once someone has taken a name on their phone, nobody else can pick it.
 
-**Free-plan note:** Supabase pauses free projects after about a week with no activity. If sync stops, open your Supabase dashboard and tap **Restore project**.
+**Free-plan note:** Supabase pauses free projects after about a week with no activity. The keep-alive job in `.github/workflows/keep-alive.yml` checks in every 3 days so that doesn't happen. To confirm it works, open **Actions** → **Keep Supabase awake** → **Run workflow**. If sync ever stops anyway, open your Supabase dashboard and tap **Restore project**.
+
+### Email sign-in (optional, recommended)
+
+Signing in with email lets anyone get all their trips back on a new phone. It uses a one-time code, not a password.
+
+1. In Supabase open **Authentication** → **Emails** (or **Email Templates**). In **Confirm signup**, **Magic Link** and **Change Email Address**, add this line to the message: `Your Let's Go code: {{ .Token }}` and save each.
+2. Supabase's built-in email only sends to members of your Supabase team, about 2 emails an hour. That's fine for testing with your own email. For friends, add your own email sender in **Authentication** → **Emails** → **SMTP Settings** (a Gmail account with an app password works: host `smtp.gmail.com`, port `465`, your Gmail address as username, the 16-letter app password as password).
 
 ## 3. Add it to your iPhone Home Screen
 
@@ -56,4 +63,4 @@ Open the app link in Safari → **Share** → **Add to Home Screen**. It opens f
 - Receipt scanning takes a photo, but you type the details. Automatic reading isn't connected.
 - No push notifications yet. Changes show up when the app is open.
 - "Remove from my phone" takes a trip off your phone only. Everyone else keeps it, and you can rejoin with the invite link. When the last person removes a trip, its data is deleted from the database.
-- If someone clears their browser data, they rejoin with the trip's invite link.
+- If someone clears their browser data or changes phones, they sign in with their email to get every trip back. Without email sign-in, they rejoin with each trip's invite link (**My trips** → **Save my trips** sends them all in one message).
