@@ -1339,21 +1339,49 @@ async function handleJoinLink() {
    push every bottom-anchored element down to the real bottom of the screen. */
 function fixHomeScreenHeight() {
   const r = document.documentElement;
-  const standalone = window.navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
-  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   let gap = 0;
-  if (standalone && ios) {
-    const portrait = window.innerHeight > window.innerWidth;
+  if (HS.on) {
+    const h = window.innerHeight;
+    HS.max = Math.max(HS.max, h);
+    const portrait = h > window.innerWidth;
     const full = portrait ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);
-    const diff = full - window.innerHeight;
-    if (diff > 0 && diff <= 64) gap = diff;
+    const diff = full - h;
+    const typing = HS.focused();
+    /* Launch bug: the page is told it's one status bar short. Push bottom bars to the real bottom.
+       Skip while typing (the keyboard takes real space) and after the keyboard bug below,
+       where the page really is shorter and pushing would hide the tab bar. */
+    if (!typing && !HS.shrunk && diff > 0 && diff <= 80) gap = diff;
   }
   r.style.setProperty("--gap", gap + "px");
   r.classList.toggle("ios-gap", gap > 0);
 }
+/* Keyboard bug: after the keyboard closes, iOS can leave a Home Screen app shorter by a status bar
+   until it's reopened, so the tab bar floats and a dark band shows underneath.
+   Hiding and showing the page for one frame makes iOS measure the screen again. */
+const HS = {
+  on: (window.navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches)) &&
+      (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)),
+  max: window.innerHeight, shrunk: false,
+  focused() { const a = document.activeElement; return !!a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable); }
+};
+function remeasureScreen() {
+  if (!HS.on || HS.focused()) return;
+  if (HS.max - window.innerHeight > 4) {
+    const y = window.scrollY, b = document.body;
+    b.style.display = "none"; void b.offsetHeight; b.style.display = "";
+    window.scrollTo(0, y);
+    HS.shrunk = HS.max - window.innerHeight > 4;
+  } else HS.shrunk = false;
+  fixHomeScreenHeight();
+}
 fixHomeScreenHeight();
 window.addEventListener("resize", fixHomeScreenHeight);
-window.addEventListener("orientationchange", () => setTimeout(fixHomeScreenHeight, 300));
+window.addEventListener("orientationchange", () => setTimeout(() => { HS.max = 0; HS.shrunk = false; fixHomeScreenHeight(); }, 300));
+document.addEventListener("focusout", () => setTimeout(remeasureScreen, 160));
+document.addEventListener("focusin", () => setTimeout(fixHomeScreenHeight, 50));
+document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(remeasureScreen, 120); });
+window.addEventListener("pageshow", () => setTimeout(fixHomeScreenHeight, 60));
+[150, 600, 1500].forEach(t => setTimeout(fixHomeScreenHeight, t));
 
 /* ============ Live sync (shared trip store) ============ */
 let DB = null, syncReady = false, syncState = "local", synced = {}, metaSynced = "", pushT = null, pushing = false, pushAgain = false, syncWarned = false, subs = [], subTrip = "";
