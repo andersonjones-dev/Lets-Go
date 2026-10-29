@@ -8,7 +8,7 @@
  *
  * The app always opens from the saved copy, so it works with no internet.
  */
-const VERSION = 'letsgo-v11';
+const VERSION = 'letsgo-v12';
 const PREFIX = 'letsgo-';   // only caches starting with this are ever deleted: other apps share this storage
 const LIB = 'letsgo-lib';         // fonts and libraries from other sites, kept between versions
 const KEEP = [];

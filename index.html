@@ -17,7 +17,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Young+Serif&family=Figtree:wght@400;500;600;700&family=Caveat:wght@400;700&family=Patrick+Hand&display=swap">
-<style id="cssClassic">
+<style id="cssClassic">/* Bottom spacing (same in all of Anderson's apps; ClockIt 2.4.1, checked on an iPhone 12).
+   --safe-b is the home-bar space, reduced by however much iOS has made a Home Screen
+   app's window short (it then already ends above the home bar). CSS only: no height
+   measuring code, which made iOS shrink the window and the layout jump. */
+:root{--safe-b:env(safe-area-inset-bottom,0px)}
+@supports (height:100lvh){:root{--safe-b:max(0px,calc(env(safe-area-inset-bottom,0px) - clamp(0px,100lvh - 100dvh,60px)))}}
+/* Double tap never zooms (pinch zoom still works, so text can be enlarged). */
+:where(html,body,*){touch-action:manipulation}
+
 /* Layout: one phone-width column (max 480px), sticky screen header, scrolling body, fixed five-tab bar.
    Classic design. Colours: Original (evergreen), Masala, Monsoon, each light or dark (html.m-dark). */
 :root{
@@ -49,8 +57,8 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 input,select,textarea{font:inherit;color:var(--ink)}
 a{color:inherit}
 :focus-visible{outline:3px solid var(--yellow);outline-offset:2px;border-radius:10px}
-.app{max-width:480px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(var(--nav-h) + 40px + env(safe-area-inset-bottom,0px))}
-.app.chatmode{padding-block-end:calc(var(--nav-h) + 92px + env(safe-area-inset-bottom,0px))}
+.app{max-width:480px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(var(--nav-h) + 40px + var(--safe-b))}
+.app.chatmode{padding-block-end:calc(var(--nav-h) + 92px + var(--safe-b))}
 .ic{flex:none;display:block}
 h1,h2,h3{font-family:var(--font-d);margin:0;text-wrap:balance;letter-spacing:-.01em}
 .muted{color:var(--muted)}
@@ -65,7 +73,7 @@ h1,h2,h3{font-family:var(--font-d);margin:0;text-wrap:balance;letter-spacing:-.0
 .brand b{font-family:var(--font-d);font-size:26px;font-weight:800;color:var(--teal);line-height:1;display:block}
 .brand small{font-size:12.5px;color:var(--muted)}
 
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--nav-bg);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--nav-bg);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:var(--safe-b);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 .nav-in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);height:var(--nav-h)}
 .nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11.5px;font-weight:600;color:var(--muted)}
 .nav .pill{width:52px;height:30px;border-radius:15px;display:grid;place-items:center;transition:background .2s}
@@ -138,7 +146,7 @@ h1,h2,h3{font-family:var(--font-d);margin:0;text-wrap:balance;letter-spacing:-.0
 .tile{display:flex;align-items:center;gap:12px;padding:12px;text-align:left;border-radius:var(--r-lg);min-width:0}
 .tile b{display:block;font-family:var(--font-d);font-size:16px;color:var(--teal)}
 .tile small{color:var(--muted);font-weight:600;font-size:12.5px}
-.fab{position:fixed;z-index:24;right:max(18px,calc(50% - 222px));bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:20px;background:var(--coral);color:#3A140B;display:grid;place-items:center;box-shadow:0 12px 24px -10px rgba(0,0,0,.45)}
+.fab{position:fixed;z-index:24;right:max(18px,calc(50% - 222px));bottom:calc(var(--nav-h) + 16px + var(--safe-b));width:58px;height:58px;border-radius:20px;background:var(--coral);color:#3A140B;display:grid;place-items:center;box-shadow:0 12px 24px -10px rgba(0,0,0,.45)}
 .today{padding:16px;display:flex;flex-direction:column;gap:12px;border-radius:var(--r-xl)}
 .today .big{font-family:var(--font-d);font-size:22px;font-weight:800;color:var(--teal);line-height:1.15}
 .today .when{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13px;color:var(--ever)}
@@ -280,7 +288,7 @@ h1,h2,h3{font-family:var(--font-d);margin:0;text-wrap:balance;letter-spacing:-.0
 .msg.me .refcard{background:var(--card)}
 .refcard b{display:block;font-size:13.5px}
 .refcard small{display:block;font-size:12px;color:var(--muted)}
-.composer{position:fixed;left:0;right:0;z-index:24;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px));background:var(--ivory);border-top:1px solid var(--line);padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:10px}
+.composer{position:fixed;left:0;right:0;z-index:24;bottom:calc(var(--nav-h) + var(--safe-b));background:var(--ivory);border-top:1px solid var(--line);padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:10px}
 .composer form{max-width:480px;margin:0 auto;display:flex;gap:8px;align-items:center}
 .composer input{flex:1;min-width:0;height:46px;border-radius:999px;border:1px solid var(--line);background:var(--card);padding:0 16px;font-size:16px}
 .tripbar{display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;text-align:left}
@@ -289,7 +297,7 @@ h1,h2,h3{font-family:var(--font-d);margin:0;text-wrap:balance;letter-spacing:-.0
 
 .scrim{position:fixed;inset:0;z-index:40;background:rgba(10,24,20,.45);opacity:0;transition:opacity .2s}
 .scrim.show{opacity:1}
-.sheet{position:fixed;z-index:41;left:0;right:0;bottom:0;margin:0 auto;max-width:480px;max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;background:var(--ivory);border-radius:26px 26px 0 0;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-block:8px calc(24px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.sheet{position:fixed;z-index:41;left:0;right:0;bottom:0;margin:0 auto;max-width:480px;max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;background:var(--ivory);border-radius:26px 26px 0 0;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-block:8px calc(24px + var(--safe-b));transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
 .sheet.show{transform:none}
 .grab{width:40px;height:5px;border-radius:3px;background:var(--line-strong);margin:4px auto 10px}
 .sheet-h{display:flex;align-items:center;gap:10px;margin-bottom:14px}
@@ -343,7 +351,7 @@ textarea.inp{height:auto;min-height:76px;padding:12px 14px;resize:vertical}
 .stats b{display:block;font-family:var(--font-d);font-size:19px;color:var(--teal);overflow-wrap:anywhere}
 .stats small{font-size:11.5px;color:var(--muted);font-weight:600}
 
-.toast{position:fixed;z-index:60;left:50%;bottom:calc(var(--nav-h) + 24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--toast-bg);color:var(--toast-fg);padding:11px 18px;border-radius:999px;font-weight:600;font-size:14px;transition:all .25s;pointer-events:none;max-width:calc(100% - 32px);display:flex;gap:8px;align-items:center}
+.toast{position:fixed;z-index:60;left:50%;bottom:calc(var(--nav-h) + 24px + var(--safe-b));transform:translate(-50%,20px);opacity:0;background:var(--toast-bg);color:var(--toast-fg);padding:11px 18px;border-radius:999px;font-weight:600;font-size:14px;transition:all .25s;pointer-events:none;max-width:calc(100% - 32px);display:flex;gap:8px;align-items:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .screen{animation:fade .22s ease}
 @keyframes fade{from{opacity:.4;transform:translateY(4px)}}
@@ -419,9 +427,9 @@ input,select,textarea{font:inherit;color:var(--color-text)}
 a{color:inherit}
 :focus-visible{outline:2px dashed var(--color-primary);outline-offset:3px;border-radius:var(--radius-sm)}
 /* Notebook page: ruled lines and a red margin */
-.app{max-width:480px;margin:0 auto;min-height:100%;padding-left:max(22px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(var(--nav-h) + 40px + env(safe-area-inset-bottom,0px));
+.app{max-width:480px;margin:0 auto;min-height:100%;padding-left:max(22px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(var(--nav-h) + 40px + var(--safe-b));
   background:linear-gradient(90deg,transparent 0 9px,var(--margin-line) 9px 11px,transparent 11px),repeating-linear-gradient(180deg,transparent 0 33px,var(--rule-line) 33px 34px);background-attachment:local}
-.app.chatmode{padding-block-end:calc(var(--nav-h) + 96px + env(safe-area-inset-bottom,0px))}
+.app.chatmode{padding-block-end:calc(var(--nav-h) + 96px + var(--safe-b))}
 .ic{flex:none;display:block;stroke-width:var(--icon-stroke);stroke-linecap:var(--icon-linecap);stroke-linejoin:round}
 h1,h2,h3{font-family:var(--font-display);font-weight:700;margin:0;text-wrap:balance;line-height:1.05}
 .muted{color:var(--color-text-muted)}
@@ -439,7 +447,7 @@ b,strong{font-weight:400;text-decoration:none}
 .brand small{font-size:15px;color:var(--color-text-muted)}
 
 /* Tab bar: dashed top line, active tab circled in pen */
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--color-bg);border-top:2px dashed var(--rule-strong);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--color-bg);border-top:2px dashed var(--rule-strong);padding-bottom:var(--safe-b);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 .nav-in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);height:var(--nav-h)}
 .nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:15px;color:var(--color-text-muted);min-height:44px}
 .nav .pill{width:46px;height:34px;display:grid;place-items:center;border:2px solid transparent;border-radius:var(--wobble)}
@@ -524,7 +532,7 @@ b,strong{font-weight:400;text-decoration:none}
 .tile{display:flex;align-items:center;gap:12px;padding:12px;text-align:left;min-width:0}
 .tile b{display:block;font-family:var(--font-display);font-weight:700;font-size:25px;line-height:1;color:var(--color-text)}
 .tile small{color:var(--color-text-muted);font-size:15px}
-.fab{position:fixed;z-index:24;right:max(18px,calc(50% - 222px));bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:var(--wobble);background:var(--color-surface);color:var(--color-primary);border:2.5px solid var(--color-primary);box-shadow:var(--shadow-1);display:grid;place-items:center;transform:rotate(-6deg)}
+.fab{position:fixed;z-index:24;right:max(18px,calc(50% - 222px));bottom:calc(var(--nav-h) + 16px + var(--safe-b));width:60px;height:60px;border-radius:var(--wobble);background:var(--color-surface);color:var(--color-primary);border:2.5px solid var(--color-primary);box-shadow:var(--shadow-1);display:grid;place-items:center;transform:rotate(-6deg)}
 .today{padding:var(--space-5) var(--space-4) var(--space-4);display:flex;flex-direction:column;gap:var(--space-3)}
 .today .big{font-family:var(--font-display);font-weight:700;font-size:34px;color:var(--color-text);line-height:1}
 .today .when{display:inline-flex;align-items:center;gap:6px;font-size:16px;color:var(--color-primary)}
@@ -671,7 +679,7 @@ b,strong{font-weight:400;text-decoration:none}
 .refcard{display:flex;gap:10px;align-items:center;margin-top:6px;padding:8px;border-radius:var(--radius-md);background:var(--color-bg);color:var(--color-text);border:1.5px dashed var(--pen);text-align:left;width:100%;min-height:44px}
 .refcard b{display:block;font-size:16.5px}
 .refcard small{display:block;font-size:14px;color:var(--color-text-muted)}
-.composer{position:fixed;left:0;right:0;z-index:24;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px));background:var(--color-bg);border-top:1.5px solid var(--rule-line);padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:8px}
+.composer{position:fixed;left:0;right:0;z-index:24;bottom:calc(var(--nav-h) + var(--safe-b));background:var(--color-bg);border-top:1.5px solid var(--rule-line);padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:8px}
 .composer form{max-width:480px;margin:0 auto;display:flex;gap:10px;align-items:center}
 .composer input{flex:1;min-width:0;height:46px;border:0;border-bottom:2px solid var(--rule-strong);border-radius:0;background:none;padding:0 4px;font-size:18px}
 .composer input:focus{outline:none;border-bottom-color:var(--color-primary)}
@@ -685,7 +693,7 @@ b,strong{font-weight:400;text-decoration:none}
 .sheet{position:fixed;z-index:41;left:0;right:0;bottom:0;margin:0 auto;max-width:480px;max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;
   background:linear-gradient(90deg,transparent 0 30px,var(--margin-line) 30px 32px,transparent 32px),repeating-linear-gradient(180deg,transparent 0 33px,var(--rule-line) 33px 34px),var(--color-surface);background-attachment:local;
   clip-path:polygon(0 12px,4% 5px,8% 11px,12% 3px,16% 9px,20% 4px,24% 12px,28% 5px,32% 10px,36% 2px,40% 9px,44% 5px,48% 12px,52% 4px,56% 10px,60% 3px,64% 9px,68% 5px,72% 12px,76% 4px,80% 10px,84% 3px,88% 9px,92% 5px,96% 11px,100% 4px,100% 100%,0 100%);
-  padding-left:max(42px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-block:18px calc(24px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+  padding-left:max(42px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-block:18px calc(24px + var(--safe-b));transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.8,.2,1)}
 .sheet.show{transform:none}
 .grab{width:46px;height:4px;border-radius:3px;background:var(--rule-strong);margin:4px auto 8px}
 .sheet-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}
@@ -741,7 +749,7 @@ select.inp{-webkit-appearance:none;appearance:none;background:linear-gradient(45
 .stats b{display:block;font-family:var(--font-display);font-weight:700;font-size:30px;line-height:1;color:var(--color-text);overflow-wrap:anywhere}
 .stats small{font-size:14.5px;color:var(--color-text-muted)}
 
-.toast{position:fixed;z-index:60;left:50%;bottom:calc(var(--nav-h) + 24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px) rotate(-1deg);opacity:0;background:var(--color-secondary);color:var(--ink-note);border:2px solid var(--ink-note);padding:10px 18px;border-radius:var(--radius-md);font-size:17px;box-shadow:var(--shadow-1);transition:all .25s;pointer-events:none;max-width:calc(100% - 32px);display:flex;gap:8px;align-items:center}
+.toast{position:fixed;z-index:60;left:50%;bottom:calc(var(--nav-h) + 24px + var(--safe-b));transform:translate(-50%,20px) rotate(-1deg);opacity:0;background:var(--color-secondary);color:var(--ink-note);border:2px solid var(--ink-note);padding:10px 18px;border-radius:var(--radius-md);font-size:17px;box-shadow:var(--shadow-1);transition:all .25s;pointer-events:none;max-width:calc(100% - 32px);display:flex;gap:8px;align-items:center}
 .toast.show{opacity:1;transform:translate(-50%,0) rotate(-1deg)}
 .screen{animation:fade .22s ease}
 @keyframes fade{from{opacity:.4;transform:translateY(4px)}}
@@ -750,7 +758,7 @@ select.inp{-webkit-appearance:none;appearance:none;background:linear-gradient(45
 
 <style id="cssShared">
 /* Page basics shared by both designs */
-:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--gap:0px}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:var(--safe-b)}
 body{margin:0;min-height:100vh;min-height:100dvh}
 img{max-width:100%}
 [hidden]{display:none!important}
@@ -760,7 +768,6 @@ img{max-width:100%}
 /* iPhone Home Screen height fix: if iOS reports the window short, stretch the page to the real
    screen height. Bottom bars stay at bottom:0 plus the safe area, which iOS always places at
    the true bottom; moving them lower pushes the tab bar off the screen. */
-html.ios-gap body{min-height:calc(100vh + var(--gap))}
 </style>
 </head>
 <body>
@@ -1353,52 +1360,10 @@ async function handleJoinLink() {
     toast(`You've joined ${d.trip.name}`);
   } catch { toast("That invite link didn't work. Ask for a fresh one.", "info"); }
 }
-/* iPhone Home Screen height fix: in standalone mode iOS can report the window one
-   status bar short. Measure the gap and stretch the page to the real screen height. */
-function fixHomeScreenHeight() {
-  const r = document.documentElement;
-  let gap = 0;
-  if (HS.on) {
-    const h = window.innerHeight;
-    HS.max = Math.max(HS.max, h);
-    const portrait = h > window.innerWidth;
-    const full = portrait ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);
-    const diff = full - h;
-    const typing = HS.focused();
-    /* Launch bug: the page is told it's one status bar short. Stretch the page background to fill it.
-       Skip while typing (the keyboard takes real space) and after the keyboard bug below. */
-    if (!typing && !HS.shrunk && diff > 0 && diff <= 80) gap = diff;
-  }
-  r.style.setProperty("--gap", gap + "px");
-  r.classList.toggle("ios-gap", gap > 0);
-}
-/* Keyboard bug: after the keyboard closes, iOS can leave a Home Screen app shorter by a status bar
-   until it's reopened, so the tab bar floats and a dark band shows underneath.
-   Hiding and showing the page for one frame makes iOS measure the screen again. */
-const HS = {
-  on: (window.navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches)) &&
-      (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)),
-  max: window.innerHeight, shrunk: false,
-  focused() { const a = document.activeElement; return !!a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable); }
-};
-function remeasureScreen() {
-  if (!HS.on || HS.focused()) return;
-  if (HS.max - window.innerHeight > 4) {
-    const y = window.scrollY, b = document.body;
-    b.style.display = "none"; void b.offsetHeight; b.style.display = "";
-    window.scrollTo(0, y);
-    HS.shrunk = HS.max - window.innerHeight > 4;
-  } else HS.shrunk = false;
-  fixHomeScreenHeight();
-}
-fixHomeScreenHeight();
-window.addEventListener("resize", fixHomeScreenHeight);
-window.addEventListener("orientationchange", () => setTimeout(() => { HS.max = 0; HS.shrunk = false; fixHomeScreenHeight(); }, 300));
-document.addEventListener("focusout", () => setTimeout(remeasureScreen, 160));
-document.addEventListener("focusin", () => setTimeout(fixHomeScreenHeight, 50));
-document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(remeasureScreen, 120); });
-window.addEventListener("pageshow", () => setTimeout(fixHomeScreenHeight, 60));
-[150, 600, 1500].forEach(t => setTimeout(fixHomeScreenHeight, t));
+/* Screen height: no measuring or correcting code. On an iPhone 12 every kind of
+   correction (re-measuring, stretching, hiding and showing the page) made iOS
+   shrink the Home Screen window by a status bar and the layout jump. Bottom
+   spacing is handled in CSS with --safe-b. */
 
 /* ============ Live sync (shared trip store) ============ */
 let DB = null, syncReady = false, syncState = "local", synced = {}, metaSynced = "", pushT = null, pushing = false, pushAgain = false, syncWarned = false, subs = [], subTrip = "";
