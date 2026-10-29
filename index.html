@@ -2618,7 +2618,8 @@ function tripSettings() {
     <div class="two"><button class="btn ghost sm" data-a="groups">${ic("car", 16)} Cars & rooms</button><button class="btn ghost sm" data-a="essentials">${ic("shield", 16)} Essentials</button></div></div>
   <div class="section"><button class="btn block ghost" data-a="syncSheet">${ic("wifi", 18)} Sync & joining</button>
     <div class="two"><button class="btn ghost sm" data-a="tripsSheet">${ic("suitcase", 16)} My trips</button><button class="btn danger sm" data-a="delTrip">${ic("trash", 16)} Remove from my phone</button></div>
-    <p class="calc" style="margin:0">${DB && T_remote() ? "This removes the trip from your phone only. Everyone else keeps it, and you can rejoin with the invite link." : "This removes the trip from this phone."}</p></div>`, () => {
+    <p class="calc" style="margin:0">${DB && T_remote() ? "This removes the trip from your phone only. Everyone else keeps it, and you can rejoin with the invite link." : "This removes the trip from this phone."}</p></div>
+  ${window.AppAbout ? AppAbout.linkHTML() : ""}`, () => {
     $("#tripForm").addEventListener("submit", ev => {
       ev.preventDefault();
       const name = $("#f-name").value.trim(), s = $("#f-start").value, e = $("#f-end").value;
@@ -3196,6 +3197,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }
 </script>
+<script src="about.js" data-app="Let’s Go" data-desc="Plan group trips together: the day-by-day plan, shared tasks and expenses, and quick UPI settle-up with friends." data-fine="UPI payments open your own UPI app with the amount filled in. Let’s Go never holds or moves money."></script>
 <script src="update.js" data-app="Let’s Go"></script>
 </body>
 </html>
